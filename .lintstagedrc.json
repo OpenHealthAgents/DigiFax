@@ -1,0 +1,5 @@
+{
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.py": ["uv run ruff check --fix", "uv run ruff format"],
+  "*.{json,md,yaml,yml}": ["prettier --write"]
+}

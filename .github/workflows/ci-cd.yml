@@ -1,0 +1,65 @@
+name: DigiFax CI/CD Pipeline
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  validate-and-test:
+    name: Code Validation & Unit Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: services/digifax-api
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v3
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install uv Package Manager
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install Project Dependencies
+        run: |
+          uv venv
+          uv pip install -e .
+
+      - name: Run Ruff Lint Check
+        run: uv run ruff check src tests
+
+      - name: Run Mypy Typecheck
+        run: uv run mypy src tests
+
+      - name: Run Pytest Suite
+        run: uv run pytest
+
+  build-and-deploy:
+    name: Build Containers & Package Helm Charts
+    needs: validate-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v3
+
+      - name: Build Docker Container
+        run: |
+          docker build -t digifax-api:latest -f services/digifax-api/Dockerfile services/digifax-api
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.11.1'
+
+      - name: Lint Helm Chart
+        run: helm lint services/digifax-api/deploy/helm/digifax
+
+      - name: Package Helm Chart
+        run: helm package services/digifax-api/deploy/helm/digifax --destination dist

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "digifax": {
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "src/interface/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "digifax.fullname" . }}-api
+  labels:
+    app: {{ include "digifax.fullname" . }}-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "digifax.fullname" . }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ include "digifax.fullname" . }}-api
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "digifax.fullname" . }}-config
+            - secretRef:
+                name: {{ include "digifax.fullname" . }}-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "digifax.fullname" . }}-api-service
+spec:
+  selector:
+    app: {{ include "digifax.fullname" . }}-api
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: 8000
+  type: {{ .Values.service.type }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "digifax.fullname" . }}-worker
+  labels:
+    app: {{ include "digifax.fullname" . }}-worker
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "digifax.fullname" . }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ include "digifax.fullname" . }}-worker
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "src/infrastructure/workflows/temporal_worker.py"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "digifax.fullname" . }}-config
+            - secretRef:
+                name: {{ include "digifax.fullname" . }}-secrets

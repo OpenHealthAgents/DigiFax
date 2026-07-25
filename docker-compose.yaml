@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: digifax-postgres
+    environment:
+      POSTGRES_DB: digifax
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d digifax"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: digifax-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: digifax-s3
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+  medical-data-toolkit:
+    build:
+      context: ./medical-data-toolkit
+      dockerfile: Dockerfile
+    container_name: medical-data-toolkit
+    ports:
+      - "8080:8080"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - mdt_data:/data
+    # Depends on mounting top_2000 index CSV files locally
+    # command: ./start_server.sh --config_file=src/config.yaml
+
+  digifax-api:
+    build:
+      context: .
+      dockerfile: ./docker/api.Dockerfile
+    container_name: digifax-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/digifax
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://localstack:4566
+      - MDT_ENDPOINT_URL=http://medical-data-toolkit:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  digifax-worker:
+    build:
+      context: .
+      dockerfile: ./docker/worker.Dockerfile
+    container_name: digifax-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/digifax
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://localstack:4566
+      - MDT_ENDPOINT_URL=http://medical-data-toolkit:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  localstack_data:
+  mdt_data:

@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.turbo/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS Files
+.DS_Store
+Thumbs.db
