@@ -19,6 +19,20 @@ export function AppShell({ children }: AppShellProps) {
   const [notificationsCount, setNotificationsCount] = useState(3);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Auto collapse sidebar on tablet viewports
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    handleResize(); // Call initially
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Sync theme
   const toggleTheme = () => {
     const nextDark = !darkMode;
@@ -32,13 +46,18 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   const navItems = [
-    { title: "Dashboard", icon: LayoutDashboard, path: "#dashboard" },
-    { title: "Document Intake", icon: FileText, path: "#intake", badge: "New" },
-    { title: "Reviewer Workspace", icon: Layers, path: "#reviewer" },
-    { title: "EHR Export Queue", icon: Server, path: "#ehr" },
-    { title: "Observability Metrics", icon: Activity, path: "#metrics" },
-    { title: "Security & Settings", icon: Settings, path: "#settings" },
+    { title: "Dashboard", icon: LayoutDashboard, path: "/" },
+    { title: "Document Intake", icon: FileText, path: "/intake", badge: "New" },
+    { title: "Reviewer Workspace", icon: Layers, path: "/review" },
+    { title: "Document Repository", icon: Server, path: "/documents" },
+    { title: "Patient Workspace", icon: User, path: "/patient" },
+    { title: "FHIR Explorer", icon: Shield, path: "/fhir" },
+    { title: "Workflow Monitor", icon: Activity, path: "/workflow" },
+    { title: "Observability Metrics", icon: Activity, path: "/analytics" },
+    { title: "System Administration", icon: Settings, path: "/admin" },
+    { title: "Security & Settings", icon: Settings, path: "/settings" },
   ];
+
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-200">
@@ -67,7 +86,7 @@ export function AppShell({ children }: AppShellProps) {
               <a
                 key={idx}
                 href={item.path}
-                className="flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-muted transition-colors relative"
+                className="flex items-center rounded-md px-3 py-3 text-sm font-medium hover:bg-muted transition-colors relative"
               >
                 <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
                 {sidebarOpen && (
