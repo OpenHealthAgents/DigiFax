@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Settings Control Panel. Allows clinical operators to configure organization
+ * parameters, custom branding elements, MFA sessions, webhook systems, OCR model keys, and EHR integrations.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -15,15 +21,17 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
+  // state hooks tracking save prompts and password indicators
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [llmKeyVisible, setLlmKeyVisible] = useState(false);
 
-  // Form states
+  // Form input bindings
   const [orgName, setOrgName] = useState("OpenHealth Hospital");
   const [orgEmail, setOrgEmail] = useState("admin@openhealthagents.org");
   const [mfaEnabled, setMfaEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
 
+  // Triggers visual feedback on saves
   const handleSaveSettings = () => {
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
@@ -33,7 +41,7 @@ export default function SettingsPage() {
     <AppShell>
       <div className="space-y-6">
         
-        {/* Title widget */}
+        {/* HEADER CONTROLS BAR */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">System Settings</h2>
@@ -45,6 +53,7 @@ export default function SettingsPage() {
           </Button>
         </div>
 
+        {/* Temporary Save confirmation */}
         {saveSuccess && (
           <Alert variant="success" className="py-2.5">
             <CheckCircle2 className="h-4 w-4" />
@@ -53,7 +62,7 @@ export default function SettingsPage() {
           </Alert>
         )}
 
-        {/* Setting categories Tabs */}
+        {/* Configurations tabs list */}
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="general">Branding</TabsTrigger>
@@ -62,11 +71,11 @@ export default function SettingsPage() {
             <TabsTrigger value="fhir">FHIR & Export</TabsTrigger>
           </TabsList>
 
-          {/* TAB 1: GENERAL & BRANDING */}
+          {/* TAB 1: GENERAL & PORTAL BRANDING */}
           <TabsContent value="general" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               
-              {/* Organization details */}
+              {/* Organization name and contact email */}
               <Card>
                 <CardHeader>
                   <CardTitle>Organization Profiles</CardTitle>
@@ -84,7 +93,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Branding and styling */}
+              {/* Theme color selectors and logo paths */}
               <Card>
                 <CardHeader>
                   <CardTitle>Portal Branding Customization</CardTitle>
@@ -112,11 +121,11 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          {/* TAB 2: AUTH & NOTIFICATIONS */}
+          {/* TAB 2: IDENTITY AUTH & SLACK WEBHOOKS */}
           <TabsContent value="auth" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               
-              {/* Authentication */}
+              {/* Login MFA controls */}
               <Card>
                 <CardHeader>
                   <CardTitle>Authentication & Identity</CardTitle>
@@ -137,7 +146,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Notifications */}
+              {/* Notification webhooks */}
               <Card>
                 <CardHeader>
                   <CardTitle>Notification Alert Channels</CardTitle>
@@ -161,11 +170,11 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          {/* TAB 3: AI & STORAGE CONFIG */}
+          {/* TAB 3: MODEL PROVIDERS & ARCHIVE STORAGES */}
           <TabsContent value="models" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               
-              {/* AI Config */}
+              {/* LLM / OCR Models */}
               <Card>
                 <CardHeader>
                   <CardTitle>LLM & OCR Model Configuration</CardTitle>
@@ -201,7 +210,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Storage config */}
+              {/* Bucket details */}
               <Card>
                 <CardHeader>
                   <CardTitle>Storage & Archives Configuration</CardTitle>
@@ -229,11 +238,11 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          {/* TAB 4: FHIR & EXPORT CONFIG */}
+          {/* TAB 4: FHIR SERVERS & AUTO EXPORT LIMITS */}
           <TabsContent value="fhir" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               
-              {/* FHIR Setup */}
+              {/* Medplum server endpoints */}
               <Card>
                 <CardHeader>
                   <CardTitle>EHR Target Setup</CardTitle>
@@ -254,7 +263,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Export Setup */}
+              {/* Automatic queue exports */}
               <Card>
                 <CardHeader>
                   <CardTitle>Export Mappings Configuration</CardTitle>

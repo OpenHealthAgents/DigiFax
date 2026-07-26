@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Administration Console. Handles configurations of organization users, roles, 
+ * LLM model/OCR selection profiles, FHIR target URL connections, and diagnostic health heartbeats.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -15,25 +21,30 @@ import {
 } from "lucide-react";
 
 export default function AdminPage() {
+  // state hooks managing password field visibility state
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("access");
 
+  // Mock list of user profiles within this directory
   const usersList = [
     { name: "Kalyan Kalwa", email: "kalyan@openhealthagents.org", role: "Super Admin", status: "Active" },
     { name: "Arthur Conan Doyle", email: "arthur@openhealthagents.org", role: "Clinical Reviewer", status: "Active" },
     { name: "Naveen Raj", email: "naveen@openhealthagents.org", role: "Developer", status: "Active" }
   ];
 
+  // API credentials keys mapping table
   const apiKeys = [
     { name: "Primary Medplum Connector", prefix: "df_live_8a92...", created: "2026-07-01", status: "Active" },
     { name: "OCR Ingestion webhook", prefix: "df_live_901c...", created: "2026-07-15", status: "Active" }
   ];
 
+  // Pipeline execution switches
   const featureFlags = [
     { flag: "realtime-ocr-indexing", description: "Trigger baseline OCR parsing immediately on NATS ingest queue", status: true },
     { flag: "automatic-fhir-export", description: "Directly dispatch validated resources to EHR servers without review step", status: false }
   ];
 
+  // Services heartbeats status array
   const systemHealth = [
     { name: "PostgreSQL Database", status: "Healthy", detail: "Active connection count: 24" },
     { name: "NATS Broker", status: "Healthy", detail: "Queued dispatches: 0 pending" },
@@ -44,7 +55,7 @@ export default function AdminPage() {
     <AppShell>
       <div className="space-y-6">
         
-        {/* Title widget */}
+        {/* TITLE WIDGET CONTAINER */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Admin Console</h2>
@@ -56,7 +67,7 @@ export default function AdminPage() {
           </Button>
         </div>
 
-        {/* Tab Selection */}
+        {/* Dynamic Tab Layout containing core admin configs */}
         <Tabs defaultValue="access" className="space-y-6">
           <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="access">Access</TabsTrigger>
@@ -65,7 +76,7 @@ export default function AdminPage() {
             <TabsTrigger value="health">System Diagnostics</TabsTrigger>
           </TabsList>
 
-          {/* TAB 1: ACCESS MANAGEMENT */}
+          {/* TAB 1: ACCESS DIRECTORY CONFIG */}
           <TabsContent value="access" className="space-y-6">
             <Card>
               <CardHeader>
@@ -101,10 +112,11 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          {/* TAB 2: PROVIDERS CONFIG */}
+          {/* TAB 2: AI & EHR PROVIDERS */}
           <TabsContent value="providers" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              {/* LLM & OCR Models */}
+              
+              {/* Primary extraction models */}
               <Card>
                 <CardHeader>
                   <CardTitle>AI Providers & LLMs</CardTitle>
@@ -142,7 +154,7 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* EHR Servers */}
+              {/* FHIR server URL endpoints */}
               <Card>
                 <CardHeader>
                   <CardTitle>FHIR Targets</CardTitle>
@@ -165,11 +177,11 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* TAB 3: KEYS & FEATURE FLAGS */}
+          {/* TAB 3: API KEYS & DYNAMIC SYSTEM FLAGS */}
           <TabsContent value="keys" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               
-              {/* API Keys */}
+              {/* Credentials list */}
               <Card>
                 <CardHeader>
                   <CardTitle>API Access Tokens</CardTitle>
@@ -202,7 +214,7 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Feature Flags */}
+              {/* Feature flags toggles */}
               <Card>
                 <CardHeader>
                   <CardTitle>Feature Flags</CardTitle>
@@ -224,13 +236,13 @@ export default function AdminPage() {
             </div>
           </TabsContent>
 
-          {/* TAB 4: SYSTEM HEALTH */}
+          {/* TAB 4: SYSTEM HEALTHE & DIAGNOSTICS */}
           <TabsContent value="health" className="space-y-6">
             
-            {/* System Diagnostics Metrics */}
+            {/* Cluster metric cards */}
             <div className="grid gap-6 sm:grid-cols-3">
               
-              {/* CPU */}
+              {/* CPU utilization */}
               <Card>
                 <CardContent className="p-6 text-xs space-y-2">
                   <div className="flex justify-between items-center">
@@ -245,7 +257,7 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Memory */}
+              {/* RAM allocations */}
               <Card>
                 <CardContent className="p-6 text-xs space-y-2">
                   <div className="flex justify-between items-center">
@@ -260,7 +272,7 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
 
-              {/* Storage */}
+              {/* Storage threshold */}
               <Card>
                 <CardContent className="p-6 text-xs space-y-2">
                   <div className="flex justify-between items-center">
@@ -277,7 +289,7 @@ export default function AdminPage() {
 
             </div>
 
-            {/* Health Checklist */}
+            {/* Microservice checklists */}
             <Card>
               <CardHeader>
                 <CardTitle>Core System Health Diagnostics</CardTitle>

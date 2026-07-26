@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Notification Center. Provides a central view for pipeline alert logs,
+ * reviewer assignments, mentions, unread notifications counts, and toast simulation triggers.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -12,9 +18,11 @@ import {
 } from "lucide-react";
 
 export default function NotificationsPage() {
+  // state hooks tracking mock toast outputs and types
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "warning" | "error" | "default">("default");
 
+  // Inbox data notifications list
   const [notifications, setNotifications] = useState([
     { id: 1, title: "Epic EHR export transaction failed", desc: "Server returned 401 Unauthorized for client JWT assertion.", category: "Export Failure", unread: true, time: "5m ago", type: "error" },
     { id: 2, title: "New Document Assigned for Review", desc: "DF-9011 (Elizabeth Blackwell) is awaiting clinical verification.", category: "Review Assignment", unread: true, time: "10m ago", type: "assignment" },
@@ -23,31 +31,36 @@ export default function NotificationsPage() {
     { id: 5, title: "NATS intake dispatch received", desc: "file doc-9011-fax.pdf ingested successfully in queue.", category: "Workflow Alert", unread: false, time: "4h ago", type: "success" }
   ]);
 
+  // Triggers mock alerts (which display pop-up panels in the screen corner)
   const triggerToast = (title: string, type: "success" | "warning" | "error" | "default") => {
     setToastType(type);
     setToastMessage(title);
     setTimeout(() => setToastMessage(""), 4000);
   };
 
+  // Sets all notifications unread flag status to false
   const handleMarkAllRead = () => {
     setNotifications(notifications.map((n) => ({ ...n, unread: false })));
   };
 
+  // Sets selected notification status to read
   const handleMarkRead = (id: number) => {
     setNotifications(notifications.map((n) => n.id === id ? { ...n, unread: false } : n));
   };
 
+  // Removes a notification item from the logs list
   const handleDelete = (id: number) => {
     setNotifications(notifications.filter((n) => n.id !== id));
   };
 
+  // Count helper
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
     <AppShell>
       <div className="space-y-6">
         
-        {/* Title widget */}
+        {/* HEADER CONTROLS */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Notification Center</h2>
@@ -65,7 +78,7 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {/* Local Toast Simulator Banner */}
+        {/* Dynamic slide-in Toast notification container */}
         {toastMessage && (
           <div className="fixed bottom-4 right-4 z-50 max-w-sm shadow-lg border animate-in slide-in-from-bottom-5">
             <Alert variant={toastType === "error" ? "error" : toastType === "warning" ? "warning" : "success"}>
@@ -76,7 +89,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* Action simulators panel */}
+        {/* TOAST ACTION SIMULATORS PANEL */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">Notification Simulator Controls</CardTitle>
@@ -119,7 +132,7 @@ export default function NotificationsPage() {
             </Card>
           </div>
 
-          {/* 2. INBOX LISTS (Span 3) */}
+          {/* 2. NOTIFICATIONS INBOX GRID (Span 3) */}
           <div className="lg:col-span-3 space-y-4">
             
             {/* List */}
@@ -140,7 +153,7 @@ export default function NotificationsPage() {
                         <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground/30 shrink-0" />
                       )}
 
-                      {/* Icon type */}
+                      {/* Icon category tag helper */}
                       <div className={`mt-0.5 p-1 rounded-full shrink-0 ${
                         n.type === "error" ? "bg-error/10 text-error" :
                         n.type === "assignment" ? "bg-primary/10 text-primary" :
@@ -151,7 +164,7 @@ export default function NotificationsPage() {
                          n.type === "mention" ? <Bell className="h-4 w-4" /> : <Cpu className="h-4 w-4" />}
                       </div>
 
-                      {/* Content */}
+                      {/* Content text */}
                       <div className="min-w-0 text-xs">
                         <div className="flex items-center space-x-2">
                           <p className="font-bold truncate">{n.title}</p>
@@ -162,7 +175,7 @@ export default function NotificationsPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {/* Action buttons */}
                     <div className="flex items-center space-x-2 shrink-0">
                       {n.unread && (
                         <Button 
@@ -179,6 +192,7 @@ export default function NotificationsPage() {
                         size="icon" 
                         onClick={() => handleDelete(n.id)}
                         className="h-7 w-7 text-muted-foreground hover:text-error"
+                        aria-label="Delete notification"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

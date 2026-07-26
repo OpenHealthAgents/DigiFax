@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Observability Analytics Dashboard. Displays real-time operational metrics,
+ * model accuracy parameters (OCR and AI confidence), processing durations, and operator output statistics.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -13,9 +19,11 @@ import {
 } from "lucide-react";
 
 export default function AnalyticsPage() {
+  // state hooks tracking user-selected intervals and alerts
   const [timeRange, setTimeRange] = useState("Last 7 Days");
   const [csvMessage, setCsvMessage] = useState("");
 
+  // Static mock datasets segmenting data metrics by clinic campuses
   const organizationActivity = [
     { clinic: "OpenHealth Main Campus", volume: 342, ocrAcc: "96.2%", aiConf: "91.0%", exportRate: "99.1%" },
     { clinic: "St. Jude Outpatient Clinic", volume: 185, ocrAcc: "94.0%", aiConf: "88.5%", exportRate: "98.2%" },
@@ -23,6 +31,7 @@ export default function AnalyticsPage() {
     { clinic: "Westside Lab Center", volume: 48, ocrAcc: "91.2%", aiConf: "84.1%", exportRate: "95.0%" }
   ];
 
+  // Simulates asynchronous compilation and downloads of CSV metrics
   const handleExportCSV = () => {
     setCsvMessage("CSV report downloaded successfully!");
     setTimeout(() => setCsvMessage(""), 3000);
@@ -32,14 +41,14 @@ export default function AnalyticsPage() {
     <AppShell>
       <div className="space-y-6">
         
-        {/* Title widget */}
+        {/* PAGE HEADER & DYNAMIC FILTERS */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
             <p className="text-sm text-muted-foreground">Monitor longitudinal quality KPIs, extraction metrics, and team output.</p>
           </div>
           
-          {/* Controls */}
+          {/* Controls to toggle historical scopes and dispatch downloads */}
           <div className="flex items-center space-x-3">
             <select 
               value={timeRange} 
@@ -58,6 +67,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
+        {/* Temporary CSV success alert */}
         {csvMessage && (
           <Alert variant="success" className="py-2">
             <CheckCircle2 className="h-4 w-4" />
@@ -66,10 +76,10 @@ export default function AnalyticsPage() {
           </Alert>
         )}
 
-        {/* 1. TOP ROW: KPI CARDS (Grid 4 columns) */}
+        {/* 1. TOP SECTION: KPI SUMMARIES GRID (4 Columns) */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           
-          {/* OCR accuracy */}
+          {/* Average OCR Word Accuracy */}
           <Card>
             <CardContent className="p-6">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Average OCR Accuracy</span>
@@ -85,7 +95,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          {/* AI extraction confidence */}
+          {/* Average AI Model Confidence */}
           <Card>
             <CardContent className="p-6">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">AI Extraction Confidence</span>
@@ -101,7 +111,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          {/* Terminology Mapping Accuracy */}
+          {/* US Core Mappings Accuracy */}
           <Card>
             <CardContent className="p-6">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Terminology Accuracy</span>
@@ -117,7 +127,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          {/* Average Processing Time */}
+          {/* Average processing pipeline durations */}
           <Card>
             <CardContent className="p-6">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Avg Processing Time</span>
@@ -133,21 +143,22 @@ export default function AnalyticsPage() {
 
         </div>
 
-        {/* 2. MIDDLE ROW: PROCESSING TIMES & DOCUMENT VOLUMES (Grid 2 Columns) */}
+        {/* 2. MIDDLE SECTION: DATA GRAPHS & PRODUCTIVITIES (2 Columns) */}
         <div className="grid gap-6 md:grid-cols-2">
           
-          {/* Average Processing Time Chart */}
+          {/* Average Processing Time (SVG Line Plot) */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-bold">Average Processing Duration</CardTitle>
               <CardDescription>Minutes elapsed to resolve reviewer audit cycles</CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
-              {/* SVG Line Chart */}
               <div className="relative h-48 w-full">
                 <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  {/* Grid Lines */}
                   <line x1="0" y1="20" x2="100" y2="20" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3" />
                   <line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3" />
+                  {/* Performance Data path vector */}
                   <path 
                     d="M 5,22 L 20,40 L 40,32 L 60,60 L 80,48 L 95,78" 
                     fill="none" 
@@ -162,14 +173,15 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          {/* Reviewer Productivity Bar Chart */}
+          {/* Clinician Reviewer Productivity outputs (Custom Inline Bar Plots) */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-bold">Reviewer Agent Productivity</CardTitle>
               <CardDescription>Reviews completed by operator over the {timeRange}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 flex flex-col justify-around h-48 text-xs">
-              {/* Bar 1 */}
+              
+              {/* Arthur Doyle */}
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span>Dr. Arthur Doyle</span>
@@ -180,7 +192,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               
-              {/* Bar 2 */}
+              {/* Mary Walker */}
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span>Dr. Mary Walker</span>
@@ -191,7 +203,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Bar 3 */}
+              {/* William Osler */}
               <div className="space-y-1">
                 <div className="flex justify-between font-semibold">
                   <span>Dr. William Osler</span>
@@ -206,7 +218,7 @@ export default function AnalyticsPage() {
 
         </div>
 
-        {/* 3. BOTTOM ROW: CLINIC ACTIVITY DETAILS */}
+        {/* 3. BOTTOM SECTION: CLINICAL FACILITY breakdowns */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-bold">Clinic Facility Activity Breakdown</CardTitle>

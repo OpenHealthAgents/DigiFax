@@ -15,6 +15,7 @@ DigiFax is a production-grade, event-driven medical document intake pipeline tha
 * **EHR Integration Adapters**: Custom REST / Bulk FHIR adapters supporting HAPI FHIR, Medplum, Epic, Cerner, and Athenahealth.
 * **OpenTelemetry Observability**: Telemetry tracing, Prometheus metric collection, Loki logs, and customized Grafana dashboards.
 * **Production Infrastructure**: Kubernetes manifests, Helm charts, Docker Compose configurations, and automated backup scripts.
+* **Next.js Design System Showcase**: Consolidated Tailwind CSS v4 design tokens, WCAG AA touch-targets, responsive grid layouts, and comprehensive Storybook documentation.
 
 ---
 
@@ -23,6 +24,13 @@ DigiFax is a production-grade, event-driven medical document intake pipeline tha
 ```
 DigiFax/
 ├── .github/workflows/          # GitHub Actions CI/CD workflows
+├── apps/
+│   └── design-system/          # Next.js & Tailwind CSS v4 component showcase portal
+│       ├── public/             # Static public assets (e.g. sw.js for offline support)
+│       └── src/
+│           ├── app/            # Next.js App Router (Dashboard, Intake, Review, Admin, Settings, etc.)
+│           ├── components/     # UI primitives and application layout shells
+│           └── stories/        # Storybook story integrations
 ├── services/
 │   └── digifax-api/
 │       ├── deploy/             # Deployment configurations (Docker Compose, Kubernetes, Helm)
@@ -43,9 +51,10 @@ DigiFax/
 ### Prerequisites
 * Python 3.12+
 * `uv` Package Manager
+* Node.js v20+ & `pnpm` Package Manager
 * Docker & Docker Compose
 
-### 1. Installation & Dependency Setup
+### 1. Ingestion Backend Setup
 Clone the repository and install dependencies using `uv`:
 ```bash
 cd services/digifax-api
@@ -54,23 +63,53 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
 ```
 
-### 2. Multi-Container Infrastructure
-Spin up databases, Temporal workers, NATS, Redis, MinIO, OpenSearch, and metrics collectors:
-```bash
-docker compose -f deploy/docker-compose.yml up -d
-```
-
-### 3. Running the API Server
-Start the FastAPI server:
+Start API:
 ```bash
 uv run python src/main.py
 ```
 
-### 4. Running the Temporal Worker
-Launch the worker processing the asynchronous intake pipeline tasks:
+### 2. Next.js Design System Portal Setup
+Compile layout routes and Storybook registries:
 ```bash
-uv run python src/infrastructure/workflows/temporal_worker.py
+cd apps/design-system
+pnpm install
+pnpm build
 ```
+
+To run the development server locally:
+```bash
+pnpm dev
+```
+
+To run Storybook locally:
+```bash
+pnpm storybook
+```
+
+---
+
+## 🖥️ Next.js Application Route Map
+
+* **Clinical Dashboard (`/`)**: Main hub tracking active intakes, validation alerts, and historical volume trends.
+* **Document Intake (`/intake`)**: Drag-and-drop ingestion drops, queue loaders, duplicate detections, and target EHR selectors.
+* **Clinical Review Workspace (`/review`)**: High-resolution split-screen PDF evidence highlighter and editable US Core observation records.
+* **Document Repository (`/documents`)**: Dense records table with sort, density filters, and bulk operation actions.
+* **Patient Chart (`/patient`)**: Patient demographics, glucose trend line plots, duplicates candidates, and timeline logs.
+* **FHIR Explorer (`/fhir`)**: Syntax-highlighted FHIR Bundle structure trees, JSON editors, and conform checks.
+* **Workflow Monitor (`/workflow`)**: Interconnected Temporal orchestrator activity flows, retry logs, and restart controls.
+* **Observability Analytics (`/analytics`)**: KPI summaries (OCR accuracy, AI confidence), SVG line trends, reviewer productivity comparisons.
+* **Administration Console (`/admin`)**: Configurations for users/roles, LLM models, OCR engines, active database heartbeats, and cluster usage metrics.
+* **System Settings (`/settings`)**: Settings panel for branding custom primary colors, session timeout intervals, and S3 storage pathways.
+* **Notification Center (`/notifications`)**: Inbox logs for mentions, review assignments, and simulated real-time toast alerts.
+* **Primitives Gallery (`/design-system`)**: Live interactive showcase demonstrating Tailwind CSS v4 color tokens and Radix UI primitives.
+
+---
+
+## ⚙️ Mobile & Tablet Optimizations
+
+* **Collapsible Layout Shell**: Automatically collapses navigation panels on screen resolutions under `1024px` to provide max workspace boundaries.
+* **Extended Touch targets**: Enforces vertical link paddings (`py-3`) satisfying WCAG AA touch coordinates specifications (min `44x44px`).
+* **Offline Cache Caching (`public/sw.js`)**: Service worker script caching app layouts and stylesheet variables to ensure offline availability.
 
 ---
 
@@ -107,59 +146,3 @@ Every service is fully instrumented using OpenTelemetry:
 * **Kubernetes Deployments**: Configured with Horizontal Pod Autoscaling (HPA) targeting CPU (75%) and memory (80%) thresholds.
 * **Helm Chart**: Dynamic multi-environment chart located under `services/digifax-api/deploy/helm/digifax/`.
 * **Backup script**: Automated database pg_dump and MinIO object store replication script available at `services/digifax-api/deploy/backup/backup.sh`.
-
----
-
-## 🛠️ Implementation Details & Coding Patterns
-
-### 1. FHIR R4 Generation (Fluent Builders)
-To construct compliant US Core resources, utilize the builder classes under `src/domain/fhir/builders.py`. Every builder implements method chaining:
-```python
-from src.domain.fhir.builders import PatientBuilder, ObservationBuilder, BundleBuilder
-
-# Create resources
-patient = PatientBuilder()\
-    .with_id("pat-123")\
-    .with_name("Jane", "Doe")\
-    .with_birth_date("1995-10-15")\
-    .build()
-
-observation = ObservationBuilder()\
-    .with_id("obs-123")\
-    .with_subject("pat-123")\
-    .with_loinc("15074-8", "Glucose")\
-    .with_value(95.0, "mg/dL", "mg/dL")\
-    .build()
-
-bundle = BundleBuilder()\
-    .with_id("bundle-123")\
-    .with_resource(patient)\
-    .with_resource(observation)\
-    .build()
-```
-
-### 2. Custom Clinical Rule Insertion
-To insert a new validation rule to the clinical rules engine:
-1. Extend `IValidationRule` in `src/domain/validation/rules.py`.
-2. Implement your custom checks within `validate(self, context: ValidationContext) -> list[ValidationIssue]`.
-3. Register the rule instance inside the `ValidationEngine` constructor at `src/application/services/validation_engine.py`:
-```python
-class CustomPhysiologicalRule(IValidationRule):
-    def validate(self, context: ValidationContext) -> list[ValidationIssue]:
-        issues = []
-        # Custom logic on context.extracted_report
-        return issues
-```
-
-### 3. OpenSearch Search Orchestration
-The search architecture combines keyword retrieval (BM25) and dense embeddings (1536 dimensions) using **Reciprocal Rank Fusion (RRF)**:
-* Adjust the weight between keyword matches and dense embeddings using the `alpha` parameter (default: `0.5` is balanced equally).
-* Index documents by calling `orchestrator.index(...)`.
-* Query index matching using `orchestrator.hybrid_search(query="query text", limit=10)`.
-
-### 4. EHR Adapters & Exporters
-Outbound adaptors (`src/infrastructure/ehr/`) export FHIR bundles to target repositories:
-* **HAPI / Medplum**: standard OAuth/REST transaction bundler calls.
-* **Epic**: employs signed JWT client assertions using private keys for authentication.
-* **Idempotency & Retries**: all exporters wrap execution blocks inside a thread-safe cache with exponential backoff retries to prevent duplicate submissions.
-

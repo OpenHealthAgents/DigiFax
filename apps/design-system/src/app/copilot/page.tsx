@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Clinical AI Copilot Workspace. Implements a multi-column chat helper
+ * for explaining terminology mappings, summarizing documents, and detailing US Core validation failures.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -12,6 +18,7 @@ import {
 } from "lucide-react";
 
 export default function CopilotPage() {
+  // state hooks tracking input boxes and conversation arrays
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -21,6 +28,7 @@ export default function CopilotPage() {
     }
   ]);
 
+  // Demographic context parameters for the active analyzed patient
   const activeDocContext = {
     id: "DF-9011",
     patient: "Elizabeth Blackwell",
@@ -30,22 +38,25 @@ export default function CopilotPage() {
     validationStatus: "Warning"
   };
 
+  // Preset quick prompt chips
   const quickPrompts = [
     { title: "Explain Code Maps", prompt: "Explain the LOINC concept mappings identified in this laboratory report." },
     { title: "Summarize Blood Panel", prompt: "Provide a clinical summary of the patient values extracted from the document." },
     { title: "Check US Core Errors", prompt: "Explain the US Core schema validation warnings identified for this Observation." }
   ];
 
+  // Handles client message updates and queries simulated matching outputs
   const handleSendMessage = (textToSend?: string) => {
     const query = textToSend || inputText;
     if (!query.trim()) return;
 
-    // Add user message
+    // Append the user's message to the session logs
     const userMsg = { sender: "User", text: query, time: "Just now" };
     
-    // Simulate AI response based on keywords
+    // Default reply when keywords are not hit
     let responseText = "I am auditing the active clinical context. Let me know if you would like me to explain validation thresholds or schema structures.";
     
+    // Evaluate message against target concepts
     const normalized = query.toLowerCase();
     if (normalized.includes("code") || normalized.includes("loinc")) {
       responseText = "This document identifies **LOINC code 15074-8 (Glucose [Mass/volume] in Blood)**. LOINC is the international standard for identifying laboratory observations. The extracted result of **145.0 mg/dL** matches the 'High' reference boundary.";
@@ -65,7 +76,7 @@ export default function CopilotPage() {
     <AppShell>
       <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
         
-        {/* Title widget */}
+        {/* HEADER AREA */}
         <div className="shrink-0">
           <h2 className="text-3xl font-bold tracking-tight flex items-center space-x-2">
             <Sparkles className="h-7 w-7 text-primary" />
@@ -74,13 +85,13 @@ export default function CopilotPage() {
           <p className="text-sm text-muted-foreground">Ask questions, explain terminology maps, and request summaries of ingested documents.</p>
         </div>
 
-        {/* Master columns layout */}
+        {/* Master columns grids */}
         <div className="grid gap-6 lg:grid-cols-4 flex-1 min-h-0 overflow-hidden">
           
-          {/* LEFT SIDE: CHAT INTERFACE (Span 3) */}
+          {/* LEFT COLUMN: INTERACTIVE CHAT PANEL */}
           <div className="lg:col-span-3 flex flex-col border border-border rounded-lg bg-background overflow-hidden min-h-0">
             
-            {/* Header info */}
+            {/* Session status banner */}
             <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30 shrink-0">
               <span className="text-xs font-bold flex items-center space-x-2">
                 <Bot className="h-4 w-4 text-primary" />
@@ -89,7 +100,7 @@ export default function CopilotPage() {
               <Badge variant="success">Online</Badge>
             </div>
 
-            {/* Chat message thread panel */}
+            {/* Conversation list with vertical scroll */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, idx) => (
                 <div 
@@ -98,23 +109,22 @@ export default function CopilotPage() {
                     msg.sender === "AI" ? "mr-auto" : "ml-auto flex-row-reverse space-x-reverse"
                   }`}
                 >
-                  {/* Sender Avatar */}
+                  {/* Sender Icons */}
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border shrink-0 ${
                     msg.sender === "AI" ? "bg-primary/20 border-primary/30 text-primary" : "bg-muted border-border"
                   }`}>
                     {msg.sender === "AI" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                   </div>
 
-                  {/* Message bubble */}
+                  {/* Message container */}
                   <div className={`rounded-lg p-3 leading-relaxed border ${
                     msg.sender === "AI" 
                       ? "bg-muted/30 border-border text-foreground" 
                       : "bg-primary text-primary-foreground border-primary"
                   }`}>
-                    {/* Render basic markdown bold formatting */}
+                    {/* Render markdown lines */}
                     <div className="space-y-1">
                       {msg.text.split("\n").map((line, lineIdx) => {
-                        // Check for bullet points
                         if (line.startsWith("* ")) {
                           return <li key={lineIdx} className="ml-4 list-disc">{line.replace("* ", "")}</li>;
                         }
@@ -131,13 +141,14 @@ export default function CopilotPage() {
               ))}
             </div>
 
-            {/* Quick Actions Templates Bar */}
+            {/* Quick Prompts shortcuts */}
             <div className="p-3 border-t border-border bg-muted/10 flex flex-wrap gap-2 shrink-0">
               {quickPrompts.map((qp, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(qp.prompt)}
                   className="flex items-center space-x-1.5 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-medium hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label={`Select prompt: ${qp.title}`}
                 >
                   <Bookmark className="h-3 w-3 text-primary" />
                   <span>{qp.title}</span>
@@ -145,7 +156,7 @@ export default function CopilotPage() {
               ))}
             </div>
 
-            {/* Chat Input Area */}
+            {/* Input form */}
             <div className="p-3 border-t border-border bg-background flex items-center space-x-2 shrink-0">
               <input
                 type="text"
@@ -162,10 +173,10 @@ export default function CopilotPage() {
 
           </div>
 
-          {/* RIGHT SIDE: CONTEXT SUMMARY (Span 1) */}
+          {/* RIGHT COLUMN: ACTIVE CONTEXT SUMMARY */}
           <div className="space-y-6">
             
-            {/* Active Document Info */}
+            {/* Active patient metrics */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center space-x-2">
@@ -196,7 +207,7 @@ export default function CopilotPage() {
               </CardContent>
             </Card>
 
-            {/* Help & Shortcuts */}
+            {/* Capability parameters list */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center space-x-2">
