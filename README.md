@@ -63,6 +63,12 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
 ```
 
+### 1.5 Environment Configurations
+Copy the environment variables template to `.env` in the project root directory and fill in your keys (e.g. Google Gemini and OpenAI keys):
+```bash
+cp .env.example .env
+```
+
 Start API:
 ```bash
 uv run python src/main.py

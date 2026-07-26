@@ -18,6 +18,7 @@ class LiteLlmExtractor(IAiExtractor):
         backoff_factor: float = 1.5
     ):
         # Default failover pipeline
+        # Note: "openai/gpt-4o-mini" fallback requires the OPENAI_API_KEY environment variable.
         self.fallback_models = fallback_models or [
             "gemini/gemini-1.5-flash",
             "openai/gpt-4o-mini",
