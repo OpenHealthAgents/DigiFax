@@ -107,3 +107,59 @@ Every service is fully instrumented using OpenTelemetry:
 * **Kubernetes Deployments**: Configured with Horizontal Pod Autoscaling (HPA) targeting CPU (75%) and memory (80%) thresholds.
 * **Helm Chart**: Dynamic multi-environment chart located under `services/digifax-api/deploy/helm/digifax/`.
 * **Backup script**: Automated database pg_dump and MinIO object store replication script available at `services/digifax-api/deploy/backup/backup.sh`.
+
+---
+
+## 🛠️ Implementation Details & Coding Patterns
+
+### 1. FHIR R4 Generation (Fluent Builders)
+To construct compliant US Core resources, utilize the builder classes under `src/domain/fhir/builders.py`. Every builder implements method chaining:
+```python
+from src.domain.fhir.builders import PatientBuilder, ObservationBuilder, BundleBuilder
+
+# Create resources
+patient = PatientBuilder()\
+    .with_id("pat-123")\
+    .with_name("Jane", "Doe")\
+    .with_birth_date("1995-10-15")\
+    .build()
+
+observation = ObservationBuilder()\
+    .with_id("obs-123")\
+    .with_subject("pat-123")\
+    .with_loinc("15074-8", "Glucose")\
+    .with_value(95.0, "mg/dL", "mg/dL")\
+    .build()
+
+bundle = BundleBuilder()\
+    .with_id("bundle-123")\
+    .with_resource(patient)\
+    .with_resource(observation)\
+    .build()
+```
+
+### 2. Custom Clinical Rule Insertion
+To insert a new validation rule to the clinical rules engine:
+1. Extend `IValidationRule` in `src/domain/validation/rules.py`.
+2. Implement your custom checks within `validate(self, context: ValidationContext) -> list[ValidationIssue]`.
+3. Register the rule instance inside the `ValidationEngine` constructor at `src/application/services/validation_engine.py`:
+```python
+class CustomPhysiologicalRule(IValidationRule):
+    def validate(self, context: ValidationContext) -> list[ValidationIssue]:
+        issues = []
+        # Custom logic on context.extracted_report
+        return issues
+```
+
+### 3. OpenSearch Search Orchestration
+The search architecture combines keyword retrieval (BM25) and dense embeddings (1536 dimensions) using **Reciprocal Rank Fusion (RRF)**:
+* Adjust the weight between keyword matches and dense embeddings using the `alpha` parameter (default: `0.5` is balanced equally).
+* Index documents by calling `orchestrator.index(...)`.
+* Query index matching using `orchestrator.hybrid_search(query="query text", limit=10)`.
+
+### 4. EHR Adapters & Exporters
+Outbound adaptors (`src/infrastructure/ehr/`) export FHIR bundles to target repositories:
+* **HAPI / Medplum**: standard OAuth/REST transaction bundler calls.
+* **Epic**: employs signed JWT client assertions using private keys for authentication.
+* **Idempotency & Retries**: all exporters wrap execution blocks inside a thread-safe cache with exponential backoff retries to prevent duplicate submissions.
+
