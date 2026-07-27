@@ -1,31 +1,30 @@
 """
 in_memory_intake_repository.py
-In-memory partition repository verifying tenant scopes.
+In-memory partition repository verifying tenant scopes and implementing BaseInMemoryRepository features.
 """
 
-import threading
-
 from src.application.ports.iintake_document_repository import IIntakeDocumentRepository
-from src.domain.intake.entities import IntakeDocument
+from src.domain.intake.entities import IntakeDocument, IntakeStatus
+from src.domain.intake.value_objects import FileMetadata, IntakeSource
+from src.infrastructure.persistence.base_repository import BaseInMemoryRepository
 
 
-class InMemoryIntakeDocumentRepository(IIntakeDocumentRepository):
+class InMemoryIntakeDocumentRepository(BaseInMemoryRepository, IIntakeDocumentRepository):
     """
-    Thread-safe, in-memory implementation of IIntakeDocumentRepository.
+    In-memory implementation of IIntakeDocumentRepository with multi-tenancy and OCC.
 
     Purpose:
         Store document ingestion session aggregates partitioned logically.
     Business Reasoning:
-        Enforces tenant query isolations to block cross-subscriber leaks in sandboxes.
+        Enforces tenant query isolations to block cross-subscriber leaks.
     """
 
     def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._documents: dict[str, IntakeDocument] = {}
+        super().__init__()
 
     def save(self, document: IntakeDocument) -> None:
         """
-        Saves or updates the IntakeDocument.
+        Saves or updates the IntakeDocument aggregate.
 
         Purpose:
             Persist aggregates.
@@ -38,10 +37,27 @@ class InMemoryIntakeDocumentRepository(IIntakeDocumentRepository):
         Assumptions:
             Target dictionary is writeable.
         Edge Cases:
-            Uses thread-safe locking to prevent write collisions.
+            Optimistic concurrency verification.
         """
-        with self._lock:
-            self._documents[document.id] = document
+        record_data = {
+            "id": document.id,
+            "tenant_id": document.tenant_id,
+            "source": document.source.value,
+            "filename": document.metadata.filename,
+            "content_type": document.metadata.content_type,
+            "size_bytes": document.metadata.size_bytes,
+            "hash_sha256": document.metadata.hash_sha256,
+            "storage_path": document.storage_path,
+            "status": document.status.value,
+            "version": getattr(document, "version", 1)
+        }
+
+        # Call base save executing OCC check and auditing
+        self._save_record(document.id, record_data)
+        
+        # Sync version back to domain aggregate
+        saved_record = self._records[document.id]
+        document.version = saved_record["version"]
 
     def get_by_id(self, id: str, tenant_id: str) -> IntakeDocument | None:
         """
@@ -61,8 +77,59 @@ class InMemoryIntakeDocumentRepository(IIntakeDocumentRepository):
         Edge Cases:
             If document exists but belongs to a different tenant, returns None.
         """
-        with self._lock:
-            doc = self._documents.get(id)
-            if doc and doc.tenant_id == tenant_id:
-                return doc
+        record = self._get_record_by_id(id, tenant_id)
+        if not record:
             return None
+
+        # Reconstruct domain aggregate
+        metadata = FileMetadata(
+            filename=record["filename"],
+            content_type=record["content_type"],
+            size_bytes=record["size_bytes"],
+            hash_sha256=record["hash_sha256"]
+        )
+        doc = IntakeDocument(
+            id=record["id"],
+            tenant_id=record["tenant_id"],
+            source=IntakeSource(record["source"]),
+            metadata=metadata,
+            storage_path=record["storage_path"],
+            status=IntakeStatus(record["status"])
+        )
+        # Hydrate dynamic properties
+        doc.version = record["version"]
+        return doc
+
+    def list_documents(
+        self,
+        tenant_id: str,
+        limit: int = 50,
+        offset: int = 0
+    ) -> tuple[list[IntakeDocument], int]:
+        """
+        Retrieves a paginated list of active documents for a tenant.
+
+        Purpose:
+            Paginate faxes listings.
+        """
+        records, total_count = self._list_records(tenant_id, limit=limit, offset=offset)
+        docs = []
+        for record in records:
+            metadata = FileMetadata(
+                filename=record["filename"],
+                content_type=record["content_type"],
+                size_bytes=record["size_bytes"],
+                hash_sha256=record["hash_sha256"]
+            )
+            doc = IntakeDocument(
+                id=record["id"],
+                tenant_id=record["tenant_id"],
+                source=IntakeSource(record["source"]),
+                metadata=metadata,
+                storage_path=record["storage_path"],
+                status=IntakeStatus(record["status"])
+            )
+            doc.version = record["version"]
+            docs.append(doc)
+
+        return docs, total_count
