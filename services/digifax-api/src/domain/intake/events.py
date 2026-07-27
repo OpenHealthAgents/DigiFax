@@ -10,11 +10,6 @@ from src.domain.common.domain_event import DomainEvent
 class DocumentIngestedEvent(DomainEvent):
     """
     Event emitted when a document is successfully saved and registered.
-
-    Purpose:
-        Notify downstream subscribers (e.g. OCR parser, extraction agent) of a new document.
-    Business Reasoning:
-        Clinical pipelines process faxes asynchronously. Events decouple ingestion from OCR/AI workers.
     """
 
     def __init__(
@@ -25,9 +20,23 @@ class DocumentIngestedEvent(DomainEvent):
         source: str,
         storage_path: str,
         hash_sha256: str,
+        organization_id: str | None = None,
+        correlation_id: str = "",
+        trace_id: str = "",
+        user_id: str = "system",
+        version: int = 1,
         occurred_at: datetime | None = None
     ):
-        super().__init__(aggregate_id, tenant_id, occurred_at)
+        super().__init__(
+            aggregate_id=aggregate_id,
+            tenant_id=tenant_id,
+            organization_id=organization_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+            user_id=user_id,
+            version=version,
+            occurred_at=occurred_at
+        )
         self.filename = filename
         self.source = source
         self.storage_path = storage_path
@@ -37,9 +46,6 @@ class DocumentIngestedEvent(DomainEvent):
 class DocumentIntakeFailedEvent(DomainEvent):
     """
     Event emitted when ingestion validation or storage fails.
-
-    Purpose:
-        Notify downstream systems (logging, alerts) of ingestion failure.
     """
 
     def __init__(
@@ -48,8 +54,22 @@ class DocumentIntakeFailedEvent(DomainEvent):
         tenant_id: str,
         filename: str,
         reason: str,
+        organization_id: str | None = None,
+        correlation_id: str = "",
+        trace_id: str = "",
+        user_id: str = "system",
+        version: int = 1,
         occurred_at: datetime | None = None
     ):
-        super().__init__(aggregate_id, tenant_id, occurred_at)
+        super().__init__(
+            aggregate_id=aggregate_id,
+            tenant_id=tenant_id,
+            organization_id=organization_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+            user_id=user_id,
+            version=version,
+            occurred_at=occurred_at
+        )
         self.filename = filename
         self.reason = reason

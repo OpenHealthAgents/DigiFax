@@ -1,6 +1,6 @@
 """
 domain_event.py
-Base domain event carrying transaction identities and tenant identifier.
+Base domain event carrying transaction identities, tenant identifier, and tracing correlation scopes.
 """
 
 from abc import ABC
@@ -10,34 +10,33 @@ from src.domain.common.uuid import UniqueId
 
 class DomainEvent(ABC):
     """
-    Base class for all system domain events.
+    Base class for all system domain events carrying compliance and audit trails metadata.
 
     Purpose:
-        Unify messaging payloads carrying tenant_id to support partitioned downstream routing.
+        Unify messaging payloads to support partitioned downstream routing.
     Business Reasoning:
         Decoupled async pipelines must resolve tenant namespaces for logging and tracing.
     """
 
-    def __init__(self, aggregate_id: str, tenant_id: str, occurred_at: datetime | None = None):
+    def __init__(
+        self,
+        aggregate_id: str,
+        tenant_id: str,
+        organization_id: str | None = None,
+        correlation_id: str = "",
+        trace_id: str = "",
+        user_id: str = "system",
+        version: int = 1,
+        occurred_at: datetime | None = None
+    ):
         if not tenant_id.strip():
             raise ValueError("tenant_id is required for domain events")
-        self._event_id = UniqueId.generate()
-        self._aggregate_id = aggregate_id
-        self._tenant_id = tenant_id
-        self._occurred_at = occurred_at or datetime.now(UTC)
-
-    @property
-    def event_id(self) -> str:
-        return self._event_id
-
-    @property
-    def aggregate_id(self) -> str:
-        return self._aggregate_id
-
-    @property
-    def tenant_id(self) -> str:
-        return self._tenant_id
-
-    @property
-    def occurred_at(self) -> datetime:
-        return self._occurred_at
+        self.event_id = UniqueId.generate()
+        self.aggregate_id = aggregate_id
+        self.tenant_id = tenant_id
+        self.organization_id = organization_id
+        self.correlation_id = correlation_id or str(UniqueId.generate())
+        self.trace_id = trace_id or str(UniqueId.generate())
+        self.user_id = user_id
+        self.version = version
+        self.occurred_at = occurred_at or datetime.now(UTC)

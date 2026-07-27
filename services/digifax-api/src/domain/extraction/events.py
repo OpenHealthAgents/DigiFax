@@ -10,11 +10,6 @@ from src.domain.common.domain_event import DomainEvent
 class ExtractionCompletedEvent(DomainEvent):
     """
     Domain event published when clinical attributes are extracted via AI.
-
-    Purpose:
-        Signal validation services to enforce rule constraints.
-    Business Reasoning:
-        Asynchronously triggers downstream medical validation pipelines.
     """
 
     def __init__(
@@ -22,7 +17,21 @@ class ExtractionCompletedEvent(DomainEvent):
         aggregate_id: str,
         tenant_id: str,
         extractor_engine: str,
+        organization_id: str | None = None,
+        correlation_id: str = "",
+        trace_id: str = "",
+        user_id: str = "system",
+        version: int = 1,
         occurred_at: datetime | None = None
     ):
-        super().__init__(aggregate_id, tenant_id, occurred_at)
+        super().__init__(
+            aggregate_id=aggregate_id,
+            tenant_id=tenant_id,
+            organization_id=organization_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+            user_id=user_id,
+            version=version,
+            occurred_at=occurred_at
+        )
         self.extractor_engine = extractor_engine
