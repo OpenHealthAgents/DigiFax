@@ -1,6 +1,6 @@
 """
 intake_controller.py
-FastAPI REST API controller handling multi-tenant manual faxes and document uploads using TenantContext.
+FastAPI REST API controller handling multi-tenant manual faxes and document uploads with permissions.
 """
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -9,7 +9,7 @@ from src.application.common.tenant_context import TenantContext
 from src.application.use_cases.intake.commands import IngestDocumentCommand
 from src.application.use_cases.intake.handlers import IngestDocumentUseCase
 from src.domain.common.exceptions import DomainException
-from src.infrastructure.controllers.tenant_context_resolver import resolve_tenant_context
+from src.infrastructure.controllers.api_guard import require_permissions
 from src.infrastructure.messaging.in_memory_event_bus import InMemoryEventBus
 from src.infrastructure.persistence.in_memory_intake_repository import (
     InMemoryIntakeDocumentRepository,
@@ -36,14 +36,6 @@ def get_ingest_use_case() -> IngestDocumentUseCase:
         Build IngestDocumentUseCase instances with injected port adapters.
     Business Reasoning:
         Dependency inversion decouples domain use cases from infrastructure choices.
-    Inputs:
-        None.
-    Outputs:
-        IngestDocumentUseCase: Hydrated instance.
-    Assumptions:
-        Singletons are initialized.
-    Edge Cases:
-        None.
     """
     return IngestDocumentUseCase(
         repository=_repo,
@@ -53,31 +45,45 @@ def get_ingest_use_case() -> IngestDocumentUseCase:
     )
 
 
-@router.post("/upload")
+@router.post(
+    "/upload",
+    summary="Ingest manual document upload",
+    description="Validates tenant authorization and uploads PDFs/documents scoped by TenantContext.",
+    responses={
+        200: {
+            "description": "Document uploaded successfully",
+            "content": {
+                "application/json": {
+                    "example": {"status": "success", "document_id": "doc-uuid-123"}
+                }
+            }
+        },
+        400: {
+            "description": "Invalid format or tenant validation errors",
+            "content": {
+                "application/json": {
+                    "example": {"detail": {"message": "Tenant not found: tenant-missing", "code": "TENANT_NOT_FOUND"}}
+                }
+            }
+        },
+        403: {
+            "description": "Forbidden: Insufficient role permissions or missing feature flags",
+            "content": {
+                "application/json": {
+                    "example": {"detail": {"message": "Forbidden: Insufficient permissions", "code": "FORBIDDEN_PERMISSIONS"}}
+                }
+            }
+        }
+    }
+)
 async def upload_document(
     file: UploadFile = File(..., description="Document file binary payload"),
     source: str = Form("API_UPLOAD", description="Upload source channel"),
-    context: TenantContext = Depends(resolve_tenant_context),
+    context: TenantContext = Depends(require_permissions("document:write")),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
     Ingests manual user document uploads, verifying tenant active state.
-
-    Purpose:
-        Authenticate tenant context and ingest document.
-    Business Reasoning:
-        Guarantees that uploads are logically isolated by tenant boundaries.
-    Inputs:
-        file (UploadFile): Inbound binary payload.
-        source (str): Source type.
-        context (TenantContext): Resolved request scope.
-        use_case (IngestDocumentUseCase): Injected handler.
-    Outputs:
-        dict: Ingestion status and generated document_id.
-    Assumptions:
-        Tenant ID header is supplied.
-    Edge Cases:
-        Returns 400 Bad Request on DomainExceptions (Suspended or Missing tenants).
     """
     try:
         content = await file.read()
@@ -94,19 +100,22 @@ async def upload_document(
         raise HTTPException(status_code=400, detail={"message": e.message, "code": e.code})
 
 
-@router.post("/fax")
+@router.post(
+    "/fax",
+    summary="Ingest telephony FoIP fax",
+    description="Webhook endpoint mapping incoming faxes to FAX_UPLOAD.",
+    responses={
+        200: {"description": "Fax document registered successfully"},
+        403: {"description": "Forbidden: Insufficient permissions"}
+    }
+)
 async def upload_fax(
     file: UploadFile = File(..., description="Fax image or TIFF payload"),
-    context: TenantContext = Depends(resolve_tenant_context),
+    context: TenantContext = Depends(require_permissions("document:write")),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
     Simulates telephony FoIP webhook ingestion mapping source to FAX_UPLOAD.
-
-    Purpose:
-        Ingest incoming telephony faxes.
-    Business Reasoning:
-        Isolates incoming faxes under the receiving medical facility's tenant ID.
     """
     try:
         content = await file.read()
@@ -123,17 +132,22 @@ async def upload_fax(
         raise HTTPException(status_code=400, detail={"message": e.message, "code": e.code})
 
 
-@router.post("/email")
+@router.post(
+    "/email",
+    summary="Ingest email parser attachment",
+    description="Webhook endpoint mapping attachments to EMAIL_ATTACHMENT.",
+    responses={
+        200: {"description": "Email attachment registered successfully"},
+        403: {"description": "Forbidden: Insufficient permissions"}
+    }
+)
 async def ingest_email(
     file: UploadFile = File(..., description="Email attachment payload"),
-    context: TenantContext = Depends(resolve_tenant_context),
+    context: TenantContext = Depends(require_permissions("document:write")),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
     Simulates email parser worker webhooks mapping source to EMAIL_ATTACHMENT.
-
-    Purpose:
-        Ingest clinical attachments from email.
     """
     try:
         content = await file.read()

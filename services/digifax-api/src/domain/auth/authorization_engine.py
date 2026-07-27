@@ -19,7 +19,8 @@ class AuthorizationEngine:
             "PLATFORM_SUPER_ADMIN": ["TENANT_OWNER"],
             "TENANT_OWNER": ["TENANT_ADMIN"],
             "TENANT_ADMIN": ["ORGANIZATION_ADMIN"],
-            "ORGANIZATION_ADMIN": ["REVIEWER"],
+            "ORGANIZATION_ADMIN": ["REVIEWER", "CLINICAL_REVIEWER"],
+            "CLINICAL_REVIEWER": ["REVIEWER", "UPLOADER"],
             "REVIEWER": ["CLINICIAN", "UPLOADER"],
             "CLINICIAN": ["VIEWER"],
             "UPLOADER": ["VIEWER"],
@@ -34,6 +35,7 @@ class AuthorizationEngine:
             "UPLOADER": ["document:write"],
             "CLINICIAN": ["fhir:read"],
             "REVIEWER": ["document:verify", "loinc:map"],
+            "CLINICAL_REVIEWER": ["document:verify", "loinc:map", "document:write"],
             "ORGANIZATION_ADMIN": ["workspace:manage", "user:invite"],
             "TENANT_ADMIN": ["billing:read", "settings:manage"],
             "TENANT_OWNER": ["billing:write", "apikey:manage"],
@@ -46,21 +48,6 @@ class AuthorizationEngine:
     def register_custom_role(self, role_name: str, parent_roles: list[str], permissions: list[str]) -> None:
         """
         Registers a dynamic custom role.
-
-        Purpose:
-            Allow tenants to construct custom authorization categories.
-        Business Reasoning:
-            Clinical groups require matching access profiles to local workflow needs.
-        Inputs:
-            role_name (str): Role key.
-            parent_roles (list[str]): Parent roles to inherit from.
-            permissions (list[str]): Granular capabilities.
-        Outputs:
-            None.
-        Assumptions:
-            Passed parent roles exist.
-        Edge Cases:
-            Empty role names raise ValueError.
         """
         if not role_name.strip():
             raise ValueError("Custom role name cannot be empty")
@@ -73,15 +60,6 @@ class AuthorizationEngine:
     def resolve_permissions(self, role: str) -> set[str]:
         """
         Recursively resolves all direct and inherited permissions for a role.
-
-        Purpose:
-            Expand the DAG hierarchy to gather capabilities.
-        Business Reasoning:
-            Enforces policy checks based on role graphs.
-        Inputs:
-            role (str): Role string.
-        Outputs:
-            set[str]: All permissions.
         """
         permissions = set()
 
@@ -112,23 +90,6 @@ class AuthorizationEngine:
     ) -> bool:
         """
         Evaluates RBAC permissions and ABAC tenant scopes.
-
-        Purpose:
-            Authorize transactions.
-        Business Reasoning:
-            Prevents data leaks across separate client boundaries.
-        Inputs:
-            user_role (str): Active role.
-            user_tenant_id (str): User tenant boundary.
-            required_permission (str): Capability checking.
-            target_tenant_id (str): Resource tenant boundary.
-        Outputs:
-            bool: True if authorized, else False.
-        Assumptions:
-            None.
-        Edge Cases:
-            - Platform Super Admins bypass target tenant ID checks.
-            - Unmatched tenants return False.
         """
         # Phase 1: RBAC Check (Permission Existence)
         allowed_permissions = self.resolve_permissions(user_role)

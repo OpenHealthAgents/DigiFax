@@ -49,8 +49,8 @@ async def resolve_tenant_context(request: Request) -> TenantContext:
     user_agent = request.headers.get("user-agent")
 
     # 6. Simulate role/permission/flag credentials resolving
-    # Sandbox setup: tenant-123 gets full access
-    if tenant_id == "tenant-123":
+    # Sandbox setup: tenant-123 and tenant-suspended get credentials
+    if tenant_id in ["tenant-123", "tenant-suspended"]:
         roles = ["CLINICAL_REVIEWER"]
         permissions = ["document:read", "document:write"]
         sub_tier = "Gold"
