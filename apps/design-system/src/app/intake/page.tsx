@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description DigiFax Ingestion Workspace. Manages document intake pipelines, including manual uploads,
+ * drag-and-drop triggers, metadata parsing previews, duplicate warn blocks, and backend uploads connector.
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -11,6 +17,7 @@ import {
   Trash2, ArrowRight, Layers, Database, Activity, RefreshCw 
 } from "lucide-react";
 
+// Structure definition for files managed inside the intake queue
 interface UploadedFileType {
   id: string;
   name: string;
@@ -22,7 +29,10 @@ interface UploadedFileType {
 }
 
 export default function IntakePage() {
+  // Drag zone hover state indicators
   const [dragActive, setDragActive] = useState(false);
+
+  // Queue of uploaded files, initialized with mock values
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileType[]>([
     { id: "mock-1", name: "blood_chemistry_blackwell.pdf", size: "1.4 MB", progress: 100, status: "Success", ocr: "96.4%", docId: "df_doc_8a7c29b" },
     { id: "mock-2", name: "lipid_profile_doyle.pdf", size: "850 KB", progress: 100, status: "Success", ocr: "98.1%", docId: "df_doc_90b1e4c" },
@@ -30,10 +40,12 @@ export default function IntakePage() {
     { id: "mock-4", name: "metabolic_panel_osler.pdf", size: "2.1 MB", progress: 45, status: "Processing", ocr: "Analyzing..." },
   ]);
 
+  // Form input field configurations
   const [patientSearch, setPatientSearch] = useState("Elizabeth Blackwell");
   const [selectedOrg, setSelectedOrg] = useState("OpenHealth Hospital");
   const [docType, setDocType] = useState("Lab Report");
 
+  // Track hover state when dragging faxes
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -44,7 +56,11 @@ export default function IntakePage() {
     }
   };
 
-  // Upload file logic that connects to FastAPI backend
+  /**
+   * Upload file logic that connects to FastAPI backend /api/intake/upload
+   * Creates a multipart FormData boundary, dispatches it to the controller,
+   * and updates queue progress states.
+   */
   const uploadFile = async (file: File) => {
     const tempFileId = Math.random().toString();
     const newFile: UploadedFileType = {
@@ -62,6 +78,7 @@ export default function IntakePage() {
       formData.append("file", file);
       formData.append("source", "API_UPLOAD");
 
+      // Executes the fetch API proxy call to FastAPI
       const response = await fetch("/api/intake/upload", {
         method: "POST",
         body: formData,
@@ -73,6 +90,7 @@ export default function IntakePage() {
 
       const data = await response.json();
       
+      // Update queue card with success states and returned doc ID
       setUploadedFiles((prev) =>
         prev.map((item) =>
           item.id === tempFileId
@@ -82,6 +100,7 @@ export default function IntakePage() {
       );
     } catch (error) {
       console.error(error);
+      // Fallback state on network failures
       setUploadedFiles((prev) =>
         prev.map((item) =>
           item.id === tempFileId
@@ -92,6 +111,7 @@ export default function IntakePage() {
     }
   };
 
+  // Intercept dropped files and pass them to the ingestion pipeline
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -102,6 +122,7 @@ export default function IntakePage() {
     }
   };
 
+  // Remove elements from list view
   const handleDelete = (id: string) => {
     setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
   };
@@ -110,19 +131,19 @@ export default function IntakePage() {
     <AppShell>
       <div className="space-y-6">
         
-        {/* Title widget */}
+        {/* Workspace Title bar */}
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Document Intake Workspace</h2>
           <p className="text-sm text-muted-foreground">Upload and catalog clinical fax documents in batch streams.</p>
         </div>
 
-        {/* Workspace split grid */}
+        {/* Master layout split grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           
-          {/* LEFT COLUMN: UPLOAD CONTROLS (Span 2) */}
+          {/* LEFT SECTION: UPLOAD & QUEUES PANELS (Span 2) */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Drag & Drop Zone */}
+            {/* Drag & Drop File Zone */}
             <div 
               onDragEnter={handleDrag}
               onDragOver={handleDrag}
@@ -136,6 +157,7 @@ export default function IntakePage() {
               <p className="font-semibold text-lg">Drag & Drop Fax Documents Here</p>
               <p className="text-xs text-muted-foreground mt-2">Supports PDF, TIFF, PNG up to 25MB per file</p>
               
+              {/* Invisible file input trigger */}
               <input
                 type="file"
                 id="file-upload-input"
@@ -154,7 +176,7 @@ export default function IntakePage() {
               </label>
             </div>
 
-            {/* Ingested Uploads Queue */}
+            {/* Live Ingestion Queue card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
@@ -175,7 +197,7 @@ export default function IntakePage() {
                           {file.docId && <span className="ml-2 font-mono text-primary font-bold">({file.docId})</span>}
                         </p>
                         
-                        {/* Progress Bar */}
+                        {/* Progress Bar (Visible while progress < 100) */}
                         {file.progress < 100 && (
                           <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2 max-w-xs">
                             <div className="h-full bg-primary animate-pulse" style={{ width: `${file.progress}%` }} />
@@ -194,7 +216,7 @@ export default function IntakePage() {
                       >
                         {file.status}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-error" onClick={() => handleDelete(file.id)}>
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-error" onClick={() => handleDelete(file.id)} aria-label="Delete file from queue">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -205,10 +227,10 @@ export default function IntakePage() {
 
           </div>
 
-          {/* RIGHT COLUMN: METADATA & PREVIEW (Span 1) */}
+          {/* RIGHT SECTION: METADATA EDITOR & PIPELINE MAPS (Span 1) */}
           <div className="space-y-6">
             
-            {/* Metadata Editor card */}
+            {/* Metadata verification */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Metadata Editor & Preview</CardTitle>
@@ -216,13 +238,13 @@ export default function IntakePage() {
               </CardHeader>
               <CardContent className="space-y-4 pt-4">
                 
-                {/* Document preview mock box */}
+                {/* Preview Box */}
                 <div className="relative aspect-[3/4] w-full rounded-md border border-border bg-muted/20 flex items-center justify-center overflow-hidden">
                   <FileText className="h-12 w-12 text-muted-foreground/40" />
                   <span className="absolute bottom-2 right-2 text-[10px] text-muted-foreground/60 font-mono">PAGE 1 OF 3</span>
                 </div>
 
-                {/* Duplicate warning card */}
+                {/* Duplicate block warn */}
                 <div className="flex items-start space-x-3 p-3 bg-warning/10 text-warning border border-warning/30 rounded-lg text-xs">
                   <AlertTriangle className="h-5 w-5 shrink-0" />
                   <div>
@@ -231,7 +253,7 @@ export default function IntakePage() {
                   </div>
                 </div>
 
-                {/* Form fields */}
+                {/* Inputs */}
                 <div className="space-y-3 border-t border-border pt-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold uppercase text-muted-foreground">Patient Lookup</label>
@@ -251,7 +273,7 @@ export default function IntakePage() {
                   </div>
                 </div>
 
-                {/* Pipeline Node Map Progress */}
+                {/* Processing phases */}
                 <div className="border-t border-border pt-4 space-y-3">
                   <span className="text-xs font-semibold uppercase text-muted-foreground">Ingest Pipeline Progress</span>
                   
@@ -263,7 +285,7 @@ export default function IntakePage() {
                   </div>
                 </div>
 
-                {/* Confirm actions */}
+                {/* Confirmations */}
                 <div className="flex justify-end pt-4 space-x-2">
                   <Button variant="outline">Discard Fax</Button>
                   <Button variant="default">Verify Metadata</Button>

@@ -85,6 +85,7 @@ pnpm build
 To run the development server locally:
 ```bash
 pnpm dev
+# Note: Next.js dev server will automatically proxy /api requests to the backend at http://localhost:8000 using next.config.ts rewrites.
 ```
 
 To run Storybook locally:
