@@ -11,13 +11,23 @@ import {
   Trash2, ArrowRight, Layers, Database, Activity, RefreshCw 
 } from "lucide-react";
 
+interface UploadedFileType {
+  id: string;
+  name: string;
+  size: string;
+  progress: number;
+  status: string;
+  ocr: string;
+  docId?: string;
+}
+
 export default function IntakePage() {
   const [dragActive, setDragActive] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState([
-    { name: "blood_chemistry_blackwell.pdf", size: "1.4 MB", progress: 100, status: "Success", ocr: "96.4%" },
-    { name: "lipid_profile_doyle.pdf", size: "850 KB", progress: 100, status: "Success", ocr: "98.1%" },
-    { name: "urinalysis_walker_dup.pdf", size: "1.1 MB", progress: 100, status: "Duplicate", ocr: "71.0%" },
-    { name: "metabolic_panel_osler.pdf", size: "2.1 MB", progress: 45, status: "Processing", ocr: "Analyzing..." },
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileType[]>([
+    { id: "mock-1", name: "blood_chemistry_blackwell.pdf", size: "1.4 MB", progress: 100, status: "Success", ocr: "96.4%", docId: "df_doc_8a7c29b" },
+    { id: "mock-2", name: "lipid_profile_doyle.pdf", size: "850 KB", progress: 100, status: "Success", ocr: "98.1%", docId: "df_doc_90b1e4c" },
+    { id: "mock-3", name: "urinalysis_walker_dup.pdf", size: "1.1 MB", progress: 100, status: "Duplicate", ocr: "71.0%", docId: "df_doc_cd0193e" },
+    { id: "mock-4", name: "metabolic_panel_osler.pdf", size: "2.1 MB", progress: 45, status: "Processing", ocr: "Analyzing..." },
   ]);
 
   const [patientSearch, setPatientSearch] = useState("Elizabeth Blackwell");
@@ -34,22 +44,66 @@ export default function IntakePage() {
     }
   };
 
+  // Upload file logic that connects to FastAPI backend
+  const uploadFile = async (file: File) => {
+    const tempFileId = Math.random().toString();
+    const newFile: UploadedFileType = {
+      id: tempFileId,
+      name: file.name,
+      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      progress: 20,
+      status: "Processing",
+      ocr: "Uploading..."
+    };
+    setUploadedFiles((prev) => [newFile, ...prev]);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("source", "API_UPLOAD");
+
+      const response = await fetch("/api/intake/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      
+      setUploadedFiles((prev) =>
+        prev.map((item) =>
+          item.id === tempFileId
+            ? { ...item, progress: 100, status: "Success", ocr: "Completed", docId: data.document_id }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      setUploadedFiles((prev) =>
+        prev.map((item) =>
+          item.id === tempFileId
+            ? { ...item, progress: 100, status: "Error", ocr: "Failed" }
+            : item
+        )
+      );
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
-    // Simulate drop item
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const newFile = {
-        name: e.dataTransfer.files[0].name,
-        size: `${(e.dataTransfer.files[0].size / (1024 * 1024)).toFixed(1)} MB`,
-        progress: 0,
-        status: "Processing",
-        ocr: "Queuing..."
-      };
-      setUploadedFiles((prev) => [newFile, ...prev]);
+      uploadFile(e.dataTransfer.files[0]);
     }
+  };
+
+  const handleDelete = (id: string) => {
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
@@ -74,14 +128,30 @@ export default function IntakePage() {
               onDragOver={handleDrag}
               onDragLeave={handleDrag}
               onDrop={handleDrop}
-              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer relative ${
                 dragActive ? "border-primary bg-primary/5" : "border-border hover:bg-muted/10"
               }`}
             >
               <UploadCloud className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="font-semibold text-lg">Drag & Drop Fax Documents Here</p>
               <p className="text-xs text-muted-foreground mt-2">Supports PDF, TIFF, PNG up to 25MB per file</p>
-              <Button variant="outline" className="mt-4">Select Files manually</Button>
+              
+              <input
+                type="file"
+                id="file-upload-input"
+                className="hidden"
+                multiple={false}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    uploadFile(e.target.files[0]);
+                  }
+                }}
+              />
+              <label htmlFor="file-upload-input" className="mt-4">
+                <span className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
+                  Select Files manually
+                </span>
+              </label>
             </div>
 
             {/* Ingested Uploads Queue */}
@@ -94,18 +164,21 @@ export default function IntakePage() {
                 <Badge variant="default" className="text-xs">{uploadedFiles.length} files total</Badge>
               </CardHeader>
               <CardContent className="space-y-4 pt-4">
-                {uploadedFiles.map((file, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:shadow-sm transition-shadow">
+                {uploadedFiles.map((file) => (
+                  <div key={file.id} className="flex items-center justify-between p-3 border border-border rounded-lg bg-background hover:shadow-sm transition-shadow">
                     <div className="flex items-center space-x-3 min-w-0 flex-1 mr-4">
                       <FileText className="h-8 w-8 text-primary/70 shrink-0" />
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 text-xs">
                         <p className="text-sm font-semibold truncate">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">{file.size} • OCR: {file.ocr}</p>
+                        <p className="text-muted-foreground mt-0.5">
+                          {file.size} • OCR: {file.ocr}
+                          {file.docId && <span className="ml-2 font-mono text-primary font-bold">({file.docId})</span>}
+                        </p>
                         
                         {/* Progress Bar */}
                         {file.progress < 100 && (
                           <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2 max-w-xs">
-                            <div className="h-full bg-primary" style={{ width: `${file.progress}%` }} />
+                            <div className="h-full bg-primary animate-pulse" style={{ width: `${file.progress}%` }} />
                           </div>
                         )}
                       </div>
@@ -115,12 +188,13 @@ export default function IntakePage() {
                       <Badge 
                         variant={
                           file.status === "Success" ? "success" :
-                          file.status === "Duplicate" ? "warning" : "default"
+                          file.status === "Duplicate" ? "warning" :
+                          file.status === "Error" ? "error" : "default"
                         }
                       >
                         {file.status}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-error">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-error" onClick={() => handleDelete(file.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
