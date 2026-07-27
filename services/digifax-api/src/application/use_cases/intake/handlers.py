@@ -32,7 +32,7 @@ from src.domain.intake.value_objects import FileMetadata, IntakeSource
 
 class IngestDocumentUseCase:
     """
-    Orchestrates document ingestion, metadata calculation, and persistence scoped by Tenant.
+    Orchestrates document ingestion, metadata calculation, and persistence scoped by TenantContext.
 
     Purpose:
         Verify tenant status, store raw binaries physically isolated, and register Intake aggregates.
@@ -65,7 +65,7 @@ class IngestDocumentUseCase:
         Business Reasoning:
             Ensures that only authorized accounts inject faxes into system pipelines.
         Inputs:
-            command (IngestDocumentCommand): Contains file bytes, type, source, and tenant ID.
+            command (IngestDocumentCommand): Contains file bytes, type, source, and TenantContext.
         Outputs:
             str: Generated unique document ID.
         Assumptions:
@@ -75,17 +75,19 @@ class IngestDocumentUseCase:
             - Tenant account is suspended: throws DomainException (TENANT_SUSPENDED).
             - Invalid upload source string: throws DomainException (INVALID_INTAKE_SOURCE).
         """
+        tenant_id = command.context.tenant_id
+
         # Validate tenant status
-        tenant = self.tenant_repository.get_by_id(command.tenant_id)
+        tenant = self.tenant_repository.get_by_id(tenant_id)
         if not tenant:
             raise DomainException(
-                message=f"Tenant not found: {command.tenant_id}",
+                message=f"Tenant not found: {tenant_id}",
                 code="TENANT_NOT_FOUND"
             )
 
         if not tenant.is_active():
             raise DomainException(
-                message=f"Tenant account is suspended: {command.tenant_id}",
+                message=f"Tenant account is suspended: {tenant_id}",
                 code="TENANT_SUSPENDED"
             )
 

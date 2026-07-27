@@ -6,6 +6,7 @@ Unit tests verifying multi-tenant document ingestion pipelines, use cases, and r
 import pytest
 from fastapi.testclient import TestClient
 
+from src.application.common.tenant_context import TenantContext
 from src.application.use_cases.intake.commands import IngestDocumentCommand
 from src.application.use_cases.intake.handlers import IngestDocumentUseCase
 from src.domain.common.exceptions import DomainException
@@ -52,9 +53,10 @@ def test_ingest_use_case_success() -> None:
     event_bus = InMemoryEventBus()
     use_case = IngestDocumentUseCase(repo, tenant_repo, storage, event_bus)
 
-    # Ingest document under active tenant-123
+    # Ingest document under active tenant-123 context
+    context = TenantContext(tenant_id="tenant-123")
     command = IngestDocumentCommand(
-        tenant_id="tenant-123",
+        context=context,
         filename="report.pdf",
         content_type="application/pdf",
         file_bytes=b"mock pdf content",
@@ -85,9 +87,10 @@ def test_ingest_use_case_tenant_not_found() -> None:
     event_bus = InMemoryEventBus()
     use_case = IngestDocumentUseCase(repo, tenant_repo, storage, event_bus)
 
-    # Command with invalid tenant UUID
+    # Command with invalid tenant context
+    context = TenantContext(tenant_id="tenant-missing")
     command = IngestDocumentCommand(
-        tenant_id="tenant-missing",
+        context=context,
         filename="report.pdf",
         content_type="application/pdf",
         file_bytes=b"pdf",
@@ -106,9 +109,10 @@ def test_ingest_use_case_tenant_suspended() -> None:
     event_bus = InMemoryEventBus()
     use_case = IngestDocumentUseCase(repo, tenant_repo, storage, event_bus)
 
-    # Command with suspended tenant UUID
+    # Command with suspended tenant context
+    context = TenantContext(tenant_id="tenant-suspended")
     command = IngestDocumentCommand(
-        tenant_id="tenant-suspended",
+        context=context,
         filename="report.pdf",
         content_type="application/pdf",
         file_bytes=b"pdf",
@@ -136,14 +140,13 @@ def test_api_upload_endpoint_success() -> None:
 
 
 def test_api_upload_endpoint_missing_tenant_header() -> None:
-    # Post without X-Tenant-ID header
     response = client.post(
         "/api/intake/upload",
         files={"file": ("report.pdf", b"pdf content", "application/pdf")},
         data={"source": "API_UPLOAD"}
     )
-    # FastAPI returns 422 Unprocessable Entity for missing required headers
-    assert response.status_code == 422
+    # FastAPI returns 400 Bad Request now on our custom context resolver
+    assert response.status_code == 400
 
 
 def test_api_upload_endpoint_suspended_tenant() -> None:

@@ -1,13 +1,15 @@
 """
 intake_controller.py
-FastAPI REST API controller handling multi-tenant manual faxes and document uploads.
+FastAPI REST API controller handling multi-tenant manual faxes and document uploads using TenantContext.
 """
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Header
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from src.application.common.tenant_context import TenantContext
 from src.application.use_cases.intake.commands import IngestDocumentCommand
 from src.application.use_cases.intake.handlers import IngestDocumentUseCase
 from src.domain.common.exceptions import DomainException
+from src.infrastructure.controllers.tenant_context_resolver import resolve_tenant_context
 from src.infrastructure.messaging.in_memory_event_bus import InMemoryEventBus
 from src.infrastructure.persistence.in_memory_intake_repository import (
     InMemoryIntakeDocumentRepository,
@@ -55,20 +57,20 @@ def get_ingest_use_case() -> IngestDocumentUseCase:
 async def upload_document(
     file: UploadFile = File(..., description="Document file binary payload"),
     source: str = Form("API_UPLOAD", description="Upload source channel"),
-    x_tenant_id: str = Header(..., description="Unique UUID identifying the clinical tenant"),
+    context: TenantContext = Depends(resolve_tenant_context),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
     Ingests manual user document uploads, verifying tenant active state.
 
     Purpose:
-        Authenticate tenant header and ingest document.
+        Authenticate tenant context and ingest document.
     Business Reasoning:
         Guarantees that uploads are logically isolated by tenant boundaries.
     Inputs:
         file (UploadFile): Inbound binary payload.
         source (str): Source type.
-        x_tenant_id (str): Tenant header.
+        context (TenantContext): Resolved request scope.
         use_case (IngestDocumentUseCase): Injected handler.
     Outputs:
         dict: Ingestion status and generated document_id.
@@ -80,7 +82,7 @@ async def upload_document(
     try:
         content = await file.read()
         command = IngestDocumentCommand(
-            tenant_id=x_tenant_id,
+            context=context,
             filename=file.filename or "document.pdf",
             content_type=file.content_type or "application/pdf",
             file_bytes=content,
@@ -95,7 +97,7 @@ async def upload_document(
 @router.post("/fax")
 async def upload_fax(
     file: UploadFile = File(..., description="Fax image or TIFF payload"),
-    x_tenant_id: str = Header(..., description="Unique UUID identifying the clinical tenant"),
+    context: TenantContext = Depends(resolve_tenant_context),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
@@ -109,7 +111,7 @@ async def upload_fax(
     try:
         content = await file.read()
         command = IngestDocumentCommand(
-            tenant_id=x_tenant_id,
+            context=context,
             filename=file.filename or "fax.tiff",
             content_type=file.content_type or "image/tiff",
             file_bytes=content,
@@ -124,7 +126,7 @@ async def upload_fax(
 @router.post("/email")
 async def ingest_email(
     file: UploadFile = File(..., description="Email attachment payload"),
-    x_tenant_id: str = Header(..., description="Unique UUID identifying the clinical tenant"),
+    context: TenantContext = Depends(resolve_tenant_context),
     use_case: IngestDocumentUseCase = Depends(get_ingest_use_case)
 ) -> dict[str, str]:
     """
@@ -136,7 +138,7 @@ async def ingest_email(
     try:
         content = await file.read()
         command = IngestDocumentCommand(
-            tenant_id=x_tenant_id,
+            context=context,
             filename=file.filename or "attachment.pdf",
             content_type=file.content_type or "application/pdf",
             file_bytes=content,
