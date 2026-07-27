@@ -77,7 +77,7 @@ def test_ingest_use_case_success() -> None:
 
     # Verify isolated physical path S3 storage save
     expected_path = f"raw/tenant-123/{doc_id}.pdf"
-    assert storage.get(expected_path) == b"mock pdf content"
+    assert storage.get(expected_path, tenant_id="tenant-123") == b"mock pdf content"
 
 
 def test_ingest_use_case_tenant_not_found() -> None:

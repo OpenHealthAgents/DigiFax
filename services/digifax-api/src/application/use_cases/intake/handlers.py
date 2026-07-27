@@ -116,7 +116,11 @@ class IngestDocumentUseCase:
 
         # Save raw file bytes to storage partitioned by tenant ID
         storage_path = f"raw/{tenant.id}/{document_id}.{metadata.extension}"
-        resolved_path = self.storage.save(storage_path, command.file_bytes)
+        resolved_path = self.storage.save(
+            filepath=storage_path,
+            data=command.file_bytes,
+            tenant_id=tenant.id
+        )
 
         # Create aggregate and publish event
         doc = IntakeDocument.create_ingested(
