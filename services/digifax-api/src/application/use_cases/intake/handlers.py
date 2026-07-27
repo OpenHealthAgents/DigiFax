@@ -1,7 +1,27 @@
+"""
+handlers.py
+Handler orchestrating the Intake Document Use Case.
+
+Sequence Diagram:
+
+    [Client] ---> [FastAPI Controller] ---> [IngestDocumentUseCase.execute]
+                                                       |
+                                         [TenantRepository.get_by_id]
+                                                       | (Check Status)
+                                        [DocumentStorage.save(partitioned)]
+                                                       |
+                                        [IntakeDocument.create_ingested]
+                                                       |
+                                         [IntakeRepository.save]
+                                                       |
+                                           [EventBus.publish]
+"""
+
 import hashlib
 
 from src.application.ports.idocument_storage import IDocumentStorage
 from src.application.ports.iintake_document_repository import IIntakeDocumentRepository
+from src.application.ports.itenant_repository import ITenantRepository
 from src.application.use_cases.intake.commands import IngestDocumentCommand
 from src.domain.common.event_bus import IEventBus
 from src.domain.common.exceptions import DomainException
@@ -11,24 +31,64 @@ from src.domain.intake.value_objects import FileMetadata, IntakeSource
 
 
 class IngestDocumentUseCase:
-    """Orchestrates document ingestion, metadata calculation, and persistence."""
+    """
+    Orchestrates document ingestion, metadata calculation, and persistence scoped by Tenant.
+
+    Purpose:
+        Verify tenant status, store raw binaries physically isolated, and register Intake aggregates.
+    Business Reasoning:
+        Verifying tenant active status prevents unsanctioned system resource consumption.
+        Partitioning storage layout guarantees physical/logical segregation.
+    """
 
     def __init__(
         self,
         repository: IIntakeDocumentRepository,
+        tenant_repository: ITenantRepository,
         storage: IDocumentStorage,
         event_bus: IEventBus
     ):
+        """
+        Constructor injects required ports.
+        """
         self.repository = repository
+        self.tenant_repository = tenant_repository
         self.storage = storage
         self.event_bus = event_bus
 
     def execute(self, command: IngestDocumentCommand) -> str:
-        """Processes document ingestion.
-
-        Returns:
-            The generated unique document ID.
         """
+        Processes document ingestion, validates tenant active checks, and saves the payload.
+
+        Purpose:
+            Verify, partition, and save files.
+        Business Reasoning:
+            Ensures that only authorized accounts inject faxes into system pipelines.
+        Inputs:
+            command (IngestDocumentCommand): Contains file bytes, type, source, and tenant ID.
+        Outputs:
+            str: Generated unique document ID.
+        Assumptions:
+            Storage adapter is accessible.
+        Edge Cases:
+            - Tenant ID does not exist: throws DomainException (TENANT_NOT_FOUND).
+            - Tenant account is suspended: throws DomainException (TENANT_SUSPENDED).
+            - Invalid upload source string: throws DomainException (INVALID_INTAKE_SOURCE).
+        """
+        # Validate tenant status
+        tenant = self.tenant_repository.get_by_id(command.tenant_id)
+        if not tenant:
+            raise DomainException(
+                message=f"Tenant not found: {command.tenant_id}",
+                code="TENANT_NOT_FOUND"
+            )
+
+        if not tenant.is_active():
+            raise DomainException(
+                message=f"Tenant account is suspended: {command.tenant_id}",
+                code="TENANT_SUSPENDED"
+            )
+
         # Validate intake source
         try:
             source = IntakeSource(command.source)
@@ -52,13 +112,14 @@ class IngestDocumentUseCase:
 
         document_id = UniqueId.generate()
 
-        # Save raw file bytes to storage
-        storage_path = f"raw/{document_id}.{metadata.extension}"
+        # Save raw file bytes to storage partitioned by tenant ID
+        storage_path = f"raw/{tenant.id}/{document_id}.{metadata.extension}"
         resolved_path = self.storage.save(storage_path, command.file_bytes)
 
         # Create aggregate and publish event
         doc = IntakeDocument.create_ingested(
             id=document_id,
+            tenant_id=tenant.id,
             source=source,
             metadata=metadata,
             storage_path=resolved_path

@@ -81,6 +81,9 @@ export default function IntakePage() {
       // Executes the fetch API proxy call to FastAPI
       const response = await fetch("/api/intake/upload", {
         method: "POST",
+        headers: {
+          "X-Tenant-ID": "tenant-123"
+        },
         body: formData,
       });
 
