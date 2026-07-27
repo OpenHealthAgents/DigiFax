@@ -15,15 +15,20 @@ class InMemoryTenantRepository(BaseInMemoryRepository, ITenantRepository):
 
     Purpose:
         Store and retrieve Tenant aggregates locally in memory with concurrency and auditing.
-    Business Reasoning:
-        Allows high-speed local testing and verification loops.
     """
 
     def __init__(self) -> None:
         super().__init__()
         
-        # Prepopulate sandbox data for local testing and runs
-        default_config = TenantConfiguration(max_daily_uploads=100, allowed_mime_types=["application/pdf"])
+        # Prepopulate sandbox data with feature flags configuration
+        default_config = TenantConfiguration(
+            max_daily_uploads=100,
+            allowed_mime_types=["application/pdf"],
+            feature_flags={
+                "auto_ocr": True,
+                "beta_opt_in": ["ai_summarization"]
+            }
+        )
         
         # Default Active Tenant
         active_tenant = Tenant("tenant-123", "OpenHealth Hospital", TenantStatus.ACTIVE, default_config)
@@ -35,24 +40,16 @@ class InMemoryTenantRepository(BaseInMemoryRepository, ITenantRepository):
 
     def save(self, tenant: Tenant) -> None:
         """
-        Saves or updates a Tenant.
-
-        Purpose:
-            Persist tenant aggregates.
-        Business Reasoning:
-            Keeps administrative records in sync.
-        Inputs:
-            tenant (Tenant): Tenant aggregate.
-        Outputs:
-            None.
+        Saves or updates a Tenant, serializing feature flags.
         """
         record_data = {
             "id": tenant.id,
-            "tenant_id": tenant.id,  # A tenant belongs to itself as root boundary
+            "tenant_id": tenant.id,
             "name": tenant.name,
             "status": tenant.status.value,
             "max_daily_uploads": tenant.configuration.max_daily_uploads,
             "allowed_mime_types": tenant.configuration.allowed_mime_types,
+            "feature_flags": tenant.configuration.feature_flags,
             "version": getattr(tenant, "version", 1)
         }
 
@@ -64,25 +61,16 @@ class InMemoryTenantRepository(BaseInMemoryRepository, ITenantRepository):
 
     def get_by_id(self, id: str) -> Tenant | None:
         """
-        Locates a Tenant by identifier.
-
-        Purpose:
-            Load subscriber metadata.
-        Business Reasoning:
-            Verifies credentials on ingress transactions.
-        Inputs:
-            id (str): Tenant UUID.
-        Outputs:
-            Tenant | None: Tenant instance or None.
+        Locates a Tenant by identifier, restoring feature flags.
         """
-        # A tenant lookup queries itself, so we use its own ID as the tenant_id constraint
         record = self._get_record_by_id(id, tenant_id=id)
         if not record:
             return None
 
         config = TenantConfiguration(
             max_daily_uploads=record["max_daily_uploads"],
-            allowed_mime_types=record["allowed_mime_types"]
+            allowed_mime_types=record["allowed_mime_types"],
+            feature_flags=record.get("feature_flags", {})
         )
         tenant = Tenant(
             id=record["id"],
