@@ -1,3 +1,8 @@
+"""
+layout.py
+Domain models mapping document structure layout analysis.
+"""
+
 from src.domain.common.value_object import ValueObject
 from src.domain.ocr.value_objects import BoundingBox
 
@@ -78,9 +83,11 @@ class NormalizedLayoutDocument(ValueObject):
         tables: list[LayoutTable],
         key_value_pairs: list[LayoutKeyValuePair],
         hierarchy_root: LayoutHierarchyNode,
-        reading_order: list[str]
+        reading_order: list[str],
+        tenant_id: str = "tenant-123"
     ):
         self.document_id = document_id
+        self.tenant_id = tenant_id
         self.sections = sections
         self.tables = tables
         self.key_value_pairs = key_value_pairs

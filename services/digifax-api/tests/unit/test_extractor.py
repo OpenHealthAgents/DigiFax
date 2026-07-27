@@ -29,6 +29,7 @@ def get_mock_layout_doc() -> NormalizedLayoutDocument:
 
     return NormalizedLayoutDocument(
         document_id="doc-123",
+        tenant_id="tenant-123",
         sections=[sec1, sec2],
         tables=[table],
         key_value_pairs=[],

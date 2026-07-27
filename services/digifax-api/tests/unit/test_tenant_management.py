@@ -207,21 +207,26 @@ def test_domain_events() -> None:
 
     t_event = TenantCreatedEvent("tenant-abc", "OpenHealth")
     assert t_event.aggregate_id == "tenant-abc"
+    assert t_event.tenant_id == "tenant-abc"
     assert t_event.name == "OpenHealth"
 
-    m_event = MembershipAssignedEvent("m-1", "user-abc", "org-1", "REVIEWER")
+    m_event = MembershipAssignedEvent("m-1", "tenant-123", "user-abc", "org-1", "REVIEWER")
     assert m_event.aggregate_id == "m-1"
+    assert m_event.tenant_id == "tenant-123"
     assert m_event.user_id == "user-abc"
     assert m_event.organization_id == "org-1"
     assert m_event.role_name == "REVIEWER"
 
-    i_event = InvitationSentEvent("inv-1", "test@test.org", "tok-123")
+    i_event = InvitationSentEvent("inv-1", "tenant-123", "test@test.org", "tok-123")
     assert i_event.aggregate_id == "inv-1"
+    assert i_event.tenant_id == "tenant-123"
     assert i_event.recipient_email == "test@test.org"
     assert i_event.token == "tok-123"
 
-    w_event = WorkspaceCreatedEvent("ws-1", "org-1", "Pediatrics")
+    w_event = WorkspaceCreatedEvent("ws-1", "tenant-123", "org-1", "Pediatrics")
     assert w_event.aggregate_id == "ws-1"
+    assert w_event.tenant_id == "tenant-123"
     assert w_event.organization_id == "org-1"
     assert w_event.name == "Pediatrics"
+
 
