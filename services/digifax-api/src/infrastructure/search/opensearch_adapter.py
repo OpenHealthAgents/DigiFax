@@ -1,3 +1,8 @@
+"""
+opensearch_adapter.py
+Concrete adapter integrating OpenSearch keyword indexing and k-NN vector search with tenant isolation.
+"""
+
 import typing
 from typing import Any
 
@@ -15,8 +20,16 @@ else:
         OpenSearch = object
         HAS_OPENSEARCH = False
 
+
 class OpenSearchAdapter(ISearchService):
-    """Concrete adapter integrating OpenSearch keyword indexing and k-NN vector search."""
+    """
+    Concrete adapter integrating OpenSearch keyword indexing and k-NN vector search with tenant boundaries.
+
+    Purpose:
+        Isolate index documents and search queries by tenant.
+    Business Reasoning:
+        Prevents data leakage across different SaaS clinical subscribers.
+    """
 
     def __init__(
         self,
@@ -39,11 +52,12 @@ class OpenSearchAdapter(ISearchService):
             # Try to create index if it doesn't exist
             try:
                 if not self.client.indices.exists(self.index_name):
-                    # Define k-NN vector index mapping
+                    # Define k-NN vector index mapping carrying tenant_id
                     index_body = {
                         "settings": {"index": {"knn": True}},
                         "mappings": {
                             "properties": {
+                                "tenant_id": {"type": "keyword"},
                                 "ocr_text": {"type": "text"},
                                 "entities": {"type": "object"},
                                 "fhir_resources": {"type": "object"},
@@ -65,8 +79,12 @@ class OpenSearchAdapter(ISearchService):
                 pass  # Suppress connection errors during initialization
 
     def index_document(self, doc: SearchDocument) -> None:
+        """
+        Indexes a clinical document, mapping tenant_id field tags.
+        """
         doc_data = {
             "document_id": doc.document_id,
+            "tenant_id": doc.tenant_id,
             "ocr_text": doc.ocr_text,
             "entities": doc.entities,
             "fhir_resources": doc.fhir_resources,
@@ -88,15 +106,28 @@ class OpenSearchAdapter(ISearchService):
             except Exception:
                 pass  # Fallback to local indexing state silently during tests/offline
 
-    def keyword_search(self, query: str, limit: int = 10) -> list[SearchResult]:
+    def keyword_search(self, query: str, tenant_id: str, limit: int = 10) -> list[SearchResult]:
+        """
+        Performs full-text keyword retrieval scoped strictly to a tenant ID.
+        """
+        if not tenant_id or not tenant_id.strip():
+            raise ValueError("tenant_id is required for keyword search")
+
         if HAS_OPENSEARCH:
             try:
                 body = {
                     "size": limit,
                     "query": {
-                        "multi_match": {
-                            "query": query,
-                            "fields": ["ocr_text", "audit_logs"]
+                        "bool": {
+                            "must": {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": ["ocr_text", "audit_logs"]
+                                }
+                            },
+                            "filter": {
+                                "term": {"tenant_id": tenant_id}
+                            }
                         }
                     },
                     "highlight": {
@@ -122,10 +153,14 @@ class OpenSearchAdapter(ISearchService):
             except Exception:
                 pass  # Fallback to mock retrieval
 
-        # Fallback keyword match query logic
+        # Fallback keyword match query logic with strict tenant filter
         results = []
         words = query.lower().split()
         for doc_id, doc in self._db.items():
+            # Enforce tenant isolation filter
+            if doc.get("tenant_id") != tenant_id:
+                continue
+
             matches = 0
             found_hl = []
 
@@ -150,16 +185,29 @@ class OpenSearchAdapter(ISearchService):
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
-    def vector_search(self, query_vector: list[float], limit: int = 10) -> list[SearchResult]:
+    def vector_search(self, query_vector: list[float], tenant_id: str, limit: int = 10) -> list[SearchResult]:
+        """
+        Performs k-NN vector match retrieval scoped strictly to a tenant ID.
+        """
+        if not tenant_id or not tenant_id.strip():
+            raise ValueError("tenant_id is required for vector search")
+
         if HAS_OPENSEARCH:
             try:
                 body = {
                     "size": limit,
                     "query": {
-                        "knn": {
-                            "embedding": {
-                                "vector": query_vector,
-                                "k": limit
+                        "bool": {
+                            "must": {
+                                "knn": {
+                                    "embedding": {
+                                        "vector": query_vector,
+                                        "k": limit
+                                    }
+                                }
+                            },
+                            "filter": {
+                                "term": {"tenant_id": tenant_id}
                             }
                         }
                     }
@@ -179,9 +227,13 @@ class OpenSearchAdapter(ISearchService):
             except Exception:
                 pass  # Fallback to mock retrieval
 
-        # Fallback Cosine Similarity calculation
+        # Fallback Cosine Similarity calculation with strict tenant filter
         results = []
         for doc_id, doc in self._db.items():
+            # Enforce tenant isolation filter
+            if doc.get("tenant_id") != tenant_id:
+                continue
+
             doc_vec = doc.get("embedding")
             if not doc_vec or len(doc_vec) != len(query_vector):
                 continue
