@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 import pytest
 
 from src.domain.tenant_management.value_objects import (
-    Permission, Role, BillingPlan, AuditPolicy, RetentionPolicy
+    Permission, Role, BillingPlan, AuditPolicy, RetentionPolicy,
+    SubscriptionTier, SubscriptionQuotas
 )
 from src.domain.tenant_management.entities import (
     Tenant, TenantStatus, Organization, Workspace, Membership,
@@ -43,19 +44,19 @@ def test_role_value_object() -> None:
 
 
 def test_billing_plan_value_object() -> None:
-    plan1 = BillingPlan("Standard", 100.0, 50)
-    plan2 = BillingPlan("Standard", 100.0, 50)
-    plan3 = BillingPlan("Premium", 500.0, 500)
+    quotas1 = SubscriptionQuotas(500, 100, 1000, 50)
+    quotas2 = SubscriptionQuotas(500, 100, 1000, 50)
+    quotas3 = SubscriptionQuotas(10000, 2000, 50000, 1000)
+
+    plan1 = BillingPlan(SubscriptionTier.FREE, 0.0, quotas1)
+    plan2 = BillingPlan(SubscriptionTier.FREE, 0.0, quotas2)
+    plan3 = BillingPlan(SubscriptionTier.PROFESSIONAL, 149.0, quotas3)
 
     assert plan1 == plan2
     assert plan1 != plan3
 
     with pytest.raises(ValueError):
-        BillingPlan("", 100, 50)
-    with pytest.raises(ValueError):
-        BillingPlan("Standard", -10, 50)
-    with pytest.raises(ValueError):
-        BillingPlan("Standard", 100, -50)
+        BillingPlan(SubscriptionTier.FREE, -10.0, quotas1)
 
 
 def test_audit_policy_value_object() -> None:
@@ -85,7 +86,7 @@ def test_retention_policy_value_object() -> None:
 
 
 def test_subscription_entity() -> None:
-    plan = BillingPlan("Standard", 100.0, 50)
+    plan = BillingPlan(SubscriptionTier.FREE, 0.0, SubscriptionQuotas(500, 100, 1000, 50))
     start = datetime.now()
     sub = Subscription("sub-1", plan, start)
 
@@ -109,7 +110,7 @@ def test_api_key_entity() -> None:
 
 
 def test_tenant_aggregate() -> None:
-    plan = BillingPlan("Standard", 100.0, 50)
+    plan = BillingPlan(SubscriptionTier.FREE, 0.0, SubscriptionQuotas(500, 100, 1000, 50))
     sub = Subscription("sub-1", plan, datetime.now())
     audit = AuditPolicy(30, [])
     retention = RetentionPolicy(90, 365)

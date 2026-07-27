@@ -7,7 +7,13 @@ import enum
 from datetime import datetime
 
 from src.domain.common.entity import AggregateRoot, Entity
-from src.domain.tenant_management.value_objects import Role, BillingPlan, AuditPolicy, RetentionPolicy
+from src.domain.tenant_management.value_objects import (
+    Role,
+    BillingPlan,
+    AuditPolicy,
+    RetentionPolicy,
+    SubscriptionUsage
+)
 
 
 class TenantStatus(enum.StrEnum):
@@ -26,7 +32,7 @@ class InvitationStatus(enum.StrEnum):
 
 class Subscription(Entity):
     """
-    Entity representing a Tenant's billing subscription context.
+    Entity representing a Tenant's billing subscription context and consumption quotas.
 
     Purpose:
         Link a Tenant to active billing plans and check limits.
@@ -34,21 +40,40 @@ class Subscription(Entity):
         Controls operational usage bounds programmatically based on payments.
     """
 
-    def __init__(self, id: str, plan: BillingPlan, start_date: datetime):
+    def __init__(
+        self,
+        id: str,
+        plan: BillingPlan,
+        start_date: datetime,
+        current_usage: SubscriptionUsage | None = None
+    ):
         super().__init__(id)
         self.plan = plan
         self.start_date = start_date
+        self.current_usage = current_usage or SubscriptionUsage(
+            storage_used_mb=0.0,
+            ocr_pages_used=0,
+            api_calls_used=0,
+            documents_used=0
+        )
+
+    def has_exceeded_limits(self) -> dict[str, bool]:
+        """
+        Evaluates consumption quotas and returns true flags for any breaches.
+        """
+        quotas = self.plan.quotas
+        usage = self.current_usage
+
+        return {
+            "storage": usage.storage_used_mb >= quotas.max_storage_mb,
+            "ocr": usage.ocr_pages_used >= quotas.max_ocr_pages,
+            "api": usage.api_calls_used >= quotas.max_api_calls_monthly,
+            "documents": usage.documents_used >= quotas.max_documents_monthly
+        }
 
 
 class ApiKey(Entity):
-    """
-    Entity representing an automated integration API key.
-
-    Purpose:
-        Authenticate external services or fax machines programmatically.
-    Business Reasoning:
-        Clinics require API keys to feed digital fax streams into DigiFax.
-    """
+    """Entity representing an automated integration API key."""
 
     def __init__(self, id: str, hashed_key: str, label: str, expires_at: datetime | None = None):
         super().__init__(id)
@@ -71,8 +96,6 @@ class Tenant(AggregateRoot):
 
     Purpose:
         Top-level boundary enclosing billing status, API integrations, and policies.
-    Business Reasoning:
-        Primary administrative entity supporting medical network onboarding.
     """
 
     def __init__(
@@ -112,14 +135,7 @@ class Tenant(AggregateRoot):
 
 
 class Organization(AggregateRoot):
-    """
-    Aggregate Root representing a single healthcare facility (clinic or campus).
-
-    Purpose:
-        Structure physical hospital departments and localize clinical rosters.
-    Business Reasoning:
-        Hospital networks operate multiple clinics with local staff assignments.
-    """
+    """Aggregate Root representing a single healthcare facility (clinic or campus)."""
 
     def __init__(self, id: str, tenant_id: str, name: str, npi: str):
         super().__init__(id)
@@ -133,14 +149,7 @@ class Organization(AggregateRoot):
 
 
 class Workspace(Entity):
-    """
-    Entity representing a department upload queue (e.g. Pediatrics).
-
-    Purpose:
-        Locally segregate fax intake workflows.
-    Business Reasoning:
-        Clinical teams require departmental isolation to process records quickly.
-    """
+    """Entity representing a department upload queue (e.g. Pediatrics)."""
 
     def __init__(self, id: str, organization_id: str, name: str):
         super().__init__(id)
@@ -151,14 +160,7 @@ class Workspace(Entity):
 
 
 class Membership(Entity):
-    """
-    Entity mapping a user profile to a specific Organization role.
-
-    Purpose:
-        Assign practitioners to facility access groups.
-    Business Reasoning:
-        Enforces local facility access checks to safeguard PHI data.
-    """
+    """Entity mapping a user profile to a specific Organization role."""
 
     def __init__(self, id: str, user_id: str, organization_id: str, role: Role):
         super().__init__(id)
@@ -168,14 +170,7 @@ class Membership(Entity):
 
 
 class Invitation(Entity):
-    """
-    Entity governing user onboarding cycles.
-
-    Purpose:
-        Securely track invitation links sent to new reviewers.
-    Business Reasoning:
-        Restricts registration options to verified email loops.
-    """
+    """Entity governing user onboarding cycles."""
 
     def __init__(
         self,
