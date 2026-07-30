@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.infrastructure.controllers.intake_controller import router as intake_router
 from src.infrastructure.controllers.tenant_config_controller import router as tenant_config_router
 from src.infrastructure.controllers.terminology_controller import router as terminology_router
+from src.infrastructure.controllers.fhir_profile_controller import router as fhir_profile_router
 
 app = FastAPI(
     title="DigiFax Backend REST API",
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(intake_router)
 app.include_router(tenant_config_router)
 app.include_router(terminology_router)
+app.include_router(fhir_profile_router)
 
 
 @app.get("/")
