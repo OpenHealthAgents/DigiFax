@@ -5,7 +5,15 @@ Domain Entities and Aggregate Root for Tenant Branding.
 
 from typing import Any
 from src.domain.common.entity import Entity
-from src.domain.tenant_branding.value_objects import BrandingTheme, LogoSettings, CustomDomain
+from src.domain.tenant_branding.value_objects import (
+    BrandingTheme, 
+    LogoSettings, 
+    CustomDomain,
+    ContactSupport,
+    EmailBranding,
+    CustomAssets,
+    DocumentAssets
+)
 from src.domain.tenant_branding.events import (
     BrandingUpdatedEvent, 
     CustomDomainConfiguredEvent, 
@@ -25,30 +33,61 @@ class TenantBranding(Entity):
     def __init__(
         self,
         tenant_id: str,
+        company_name: str,
         theme: BrandingTheme,
         logo_settings: LogoSettings,
+        support_info: ContactSupport,
+        email_branding: EmailBranding,
+        custom_assets: CustomAssets,
+        document_assets: DocumentAssets,
+        footer_text: str,
         custom_domain: CustomDomain | None = None,
         version: int = 1
     ):
         super().__init__(id=tenant_id)
         self.tenant_id = tenant_id
+        self.company_name = company_name
         self.theme = theme
         self.logo_settings = logo_settings
+        self.support_info = support_info
+        self.email_branding = email_branding
+        self.custom_assets = custom_assets
+        self.document_assets = document_assets
+        self.footer_text = footer_text
         self.custom_domain = custom_domain
         self.version = version
         self._domain_events = []
 
-    def configure_branding(self, theme: BrandingTheme, logo_settings: LogoSettings) -> None:
-        """Updates styling theme and assets."""
+    def configure_branding(
+        self,
+        company_name: str,
+        theme: BrandingTheme,
+        logo_settings: LogoSettings,
+        support_info: ContactSupport,
+        email_branding: EmailBranding,
+        custom_assets: CustomAssets,
+        document_assets: DocumentAssets,
+        footer_text: str
+    ) -> None:
+        """Updates styling theme, support contacts, emails, backgrounds, and document assets templates."""
+        self.company_name = company_name
         self.theme = theme
         self.logo_settings = logo_settings
+        self.support_info = support_info
+        self.email_branding = email_branding
+        self.custom_assets = custom_assets
+        self.document_assets = document_assets
+        self.footer_text = footer_text
         
         event = BrandingUpdatedEvent(
             tenant_id=self.tenant_id,
             changes={
+                "company_name": company_name,
                 "primary_color": theme.palette.primary,
-                "font_family": theme.font_family,
-                "fav_icon_url": logo_settings.fav_icon_url
+                "font_family": theme.typography.font_family,
+                "fav_icon_url": logo_settings.fav_icon_url,
+                "support_email": support_info.support_email,
+                "watermark_text": document_assets.watermark_text_or_url
             }
         )
         self._domain_events.append(event)
