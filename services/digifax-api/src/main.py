@@ -11,6 +11,7 @@ from src.infrastructure.controllers.metering_controller import router as meterin
 from src.infrastructure.controllers.reporting_controller import router as reporting_router
 from src.infrastructure.controllers.notification_controller import router as notification_router
 from src.infrastructure.controllers.audit_controller import router as audit_router
+from src.infrastructure.controllers.operations_controller import router as operations_router
 
 app = FastAPI(
     title="DigiFax Backend REST API",
@@ -38,6 +39,7 @@ app.include_router(metering_router)
 app.include_router(reporting_router)
 app.include_router(notification_router)
 app.include_router(audit_router)
+app.include_router(operations_router)
 
 
 @app.get("/")
