@@ -7,6 +7,7 @@ from src.infrastructure.controllers.terminology_controller import router as term
 from src.infrastructure.controllers.fhir_profile_controller import router as fhir_profile_router
 from src.infrastructure.controllers.compliance_controller import router as compliance_router
 from src.infrastructure.controllers.encryption_controller import router as encryption_router
+from src.infrastructure.controllers.metering_controller import router as metering_router
 
 app = FastAPI(
     title="DigiFax Backend REST API",
@@ -30,6 +31,7 @@ app.include_router(terminology_router)
 app.include_router(fhir_profile_router)
 app.include_router(compliance_router)
 app.include_router(encryption_router)
+app.include_router(metering_router)
 
 
 @app.get("/")
