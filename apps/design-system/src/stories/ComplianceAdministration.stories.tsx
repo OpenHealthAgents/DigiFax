@@ -5,7 +5,7 @@ import ComplianceAdministrationPage from "../app/admin/compliance/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof ComplianceAdministrationPage> = {
-  title: "DigiFax/Administration/ComplianceAdministration",
+  title: "MedIngest/Administration/ComplianceAdministration",
   component: ComplianceAdministrationPage,
   parameters: {
     layout: "fullscreen",

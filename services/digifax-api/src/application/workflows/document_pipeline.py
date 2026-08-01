@@ -64,7 +64,7 @@ else:
                 if activity == "export_data":
                     return {"document_id": args[0].get("document_id"), "status": "exported", "context": args[0].get("context")}
                 if activity == "archive_document":
-                    return {"document_id": args[0].get("document_id"), "storage_bucket": "digifax-cold-archive", "status": "archived", "context": args[0].get("context")}
+                    return {"document_id": args[0].get("document_id"), "storage_bucket": "medingest-cold-archive", "status": "archived", "context": args[0].get("context")}
                 return {}
         class MockRetryPolicy:  # type: ignore[no-redef]
             def __init__(self, *args: Any, **kwargs: Any) -> None:

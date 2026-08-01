@@ -40,7 +40,7 @@ class SendNotificationUseCase:
         footer = config.branding_footer if config else ""
 
         # 2. Resolve template values
-        subject = "DigiFax Update"
+        subject = "MedIngest Update"
         body = f"Clinical update notice parameters: {template_params}"
         if config and template_id in config.templates:
             tpl = config.templates[template_id]

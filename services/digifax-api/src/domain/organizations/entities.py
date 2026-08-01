@@ -29,7 +29,7 @@ class Tenant(AggregateRoot):
     Purpose:
         Define identity, status, configurations, and policy bounds for a SaaS subscriber.
     Business Reasoning:
-        Every clinical transaction in DigiFax must resolve back to a verified, active subscriber entity.
+        Every clinical transaction in MedIngest must resolve back to a verified, active subscriber entity.
     Inputs:
         id (str): Tenant identifier UUID.
         name (str): Clinical facility name.

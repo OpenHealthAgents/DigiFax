@@ -5,7 +5,7 @@ import OCRAdministrationPage from "../app/admin/ocr/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof OCRAdministrationPage> = {
-  title: "DigiFax/Administration/OCRAdministration",
+  title: "MedIngest/Administration/OCRAdministration",
   component: OCRAdministrationPage,
   parameters: {
     layout: "fullscreen",

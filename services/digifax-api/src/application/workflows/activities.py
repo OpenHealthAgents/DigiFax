@@ -232,7 +232,7 @@ async def archival_activity(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "document_id": doc_id,
         "archived": True,
-        "storage_bucket": "digifax-cold-archive",
+        "storage_bucket": "medingest-cold-archive",
         "status": "archived",
         "context": payload.get("context", {})
     }

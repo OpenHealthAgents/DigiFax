@@ -52,7 +52,7 @@ export function CommandPalette() {
           <DialogHeader className="p-4 border-b border-border bg-muted/30">
             <DialogTitle className="text-sm font-semibold flex items-center space-x-2">
               <Terminal className="h-4 w-4 text-primary" />
-              <span>DigiFax Command Menu</span>
+              <span>MedIngest Command Menu</span>
             </DialogTitle>
             <DialogDescription className="sr-only">
               Quick actions command palette.

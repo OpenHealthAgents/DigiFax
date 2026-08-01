@@ -32,10 +32,10 @@ export default function DesignSystemPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <div className="flex items-center space-x-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-              DF
+              MI
             </div>
             <div>
-              <h1 className="text-lg font-bold leading-none">DigiFax Design System</h1>
+              <h1 className="text-lg font-bold leading-none">MedIngest Design System</h1>
               <span className="text-xs text-muted-foreground">Healthcare SaaS Core UI Specification</span>
             </div>
           </div>

@@ -5,7 +5,7 @@ import AnalyticsAdministrationPage from "../app/admin/analytics/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof AnalyticsAdministrationPage> = {
-  title: "DigiFax/Administration/ExecutiveAnalytics",
+  title: "MedIngest/Administration/ExecutiveAnalytics",
   component: AnalyticsAdministrationPage,
   parameters: {
     layout: "fullscreen",

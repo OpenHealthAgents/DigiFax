@@ -24,7 +24,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error inside DigiFax Shell:", error, errorInfo);
+    console.error("Uncaught error inside MedIngest Shell:", error, errorInfo);
   }
 
   private handleReset = () => {

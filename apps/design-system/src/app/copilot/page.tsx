@@ -23,7 +23,7 @@ export default function CopilotPage() {
   const [messages, setMessages] = useState([
     {
       sender: "AI",
-      text: "Hello! I am your DigiFax Clinical Copilot. How can I assist you with **DF-9011 (Elizabeth Blackwell)** today?",
+      text: "Hello! I am your MedIngest Clinical Copilot. How can I assist you with **DF-9011 (Elizabeth Blackwell)** today?",
       time: "10m ago"
     }
   ]);

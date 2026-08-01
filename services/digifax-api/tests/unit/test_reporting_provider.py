@@ -76,7 +76,7 @@ def test_reporting_http_endpoints() -> None:
             "report_id": "cfg-http-001",
             "report_type": "AI_ACCURACY",
             "cron_expression": "0 9 * * 1",
-            "recipient_email": "admin@digifax.io",
+            "recipient_email": "admin@medingest.io",
             "file_format": "EXCEL",
             "enabled": True
         }
@@ -91,7 +91,7 @@ def test_reporting_http_endpoints() -> None:
         json={
             "report_type": "AI_ACCURACY",
             "file_format": "EXCEL",
-            "recipient_email": "admin@digifax.io"
+            "recipient_email": "admin@medingest.io"
         }
     )
     assert gen_res.status_code == 201

@@ -71,10 +71,10 @@ export function AppShell({ children }: AppShellProps) {
         {/* Brand header */}
         <div className="flex h-16 items-center px-4 border-b border-border space-x-3 overflow-hidden">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            DF
+            MI
           </div>
           {sidebarOpen && (
-            <span className="font-bold text-lg tracking-tight whitespace-nowrap">DigiFax Portal</span>
+            <span className="font-bold text-lg tracking-tight whitespace-nowrap">MedIngest Portal</span>
           )}
         </div>
 
@@ -126,7 +126,7 @@ export function AppShell({ children }: AppShellProps) {
 
             {/* Breadcrumbs Path */}
             <div className="flex items-center space-x-1.5 text-sm font-medium text-muted-foreground">
-              <span>DigiFax</span>
+              <span>MedIngest</span>
               <span>/</span>
               <span className="text-foreground">Reviewer Workspace</span>
             </div>

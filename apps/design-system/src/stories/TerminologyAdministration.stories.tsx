@@ -5,7 +5,7 @@ import TerminologyAdministrationPage from "../app/admin/terminology/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof TerminologyAdministrationPage> = {
-  title: "DigiFax/Administration/TerminologyAdministration",
+  title: "MedIngest/Administration/TerminologyAdministration",
   component: TerminologyAdministrationPage,
   parameters: {
     layout: "fullscreen",

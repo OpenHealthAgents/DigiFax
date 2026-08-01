@@ -1,1 +1,1 @@
-# DigiFax API Package
+# MedIngest API Package

@@ -36,8 +36,8 @@ else:
                 print(f"FastMCP server '{self.name}' running in mock mode.")
 
 
-# Initialize the DigiFax MCP server
-mcp = FastMCP("DigiFax Clinical Processing Server")
+# Initialize the MedIngest MCP server
+mcp = FastMCP("MedIngest Clinical Processing Server")
 
 
 # --- MCP Tool Handlers ---

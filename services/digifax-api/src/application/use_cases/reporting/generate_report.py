@@ -27,7 +27,7 @@ class GenerateReportUseCase:
     ) -> GeneratedReport:
         """Instantly compiles report data, registers generated output, and dispatches notification emails."""
         report_id = f"rpt-{tenant_id}-{uuid.uuid4().hex[:8]}"
-        file_url = f"http://digifax.io/static/reports/{report_id}.{file_format.lower()}"
+        file_url = f"http://medingest.io/static/reports/{report_id}.{file_format.lower()}"
 
         # Compile dummy data summary depending on report type
         data_summary = {
@@ -58,7 +58,7 @@ class GenerateReportUseCase:
         if recipient_email:
             self.mailer.send_report_email(
                 recipient_email=recipient_email,
-                subject=f"DigiFax {report_type} Diagnostic Report ready",
+                subject=f"MedIngest {report_type} Diagnostic Report ready",
                 report_url=file_url,
                 file_format=file_format
             )

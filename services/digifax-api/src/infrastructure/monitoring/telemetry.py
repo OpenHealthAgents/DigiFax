@@ -88,7 +88,7 @@ class TelemetryService:
     external HTTP dispatches, and business domain indicators (OCR and AI confidence levels).
     """
 
-    def __init__(self, service_name: str = "digifax-api"):
+    def __init__(self, service_name: str = "medingest-api"):
         """Instantiates and registers the instrumentation providers.
 
         Args:

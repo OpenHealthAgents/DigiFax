@@ -39,7 +39,7 @@ class OpenSearchAdapter(ISearchService):
         http_auth: tuple[str, str] | None = None
     ):
         self.hosts = hosts or ["https://localhost:9200"]
-        self.index_name = "digifax-documents"
+        self.index_name = "medingest-documents"
         self._db: dict[str, dict[str, Any]] = {}  # In-memory fallback DB for mock mode
 
         if HAS_OPENSEARCH:

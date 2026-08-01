@@ -5,7 +5,7 @@ import AIAdministrationPage from "../app/admin/ai/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof AIAdministrationPage> = {
-  title: "DigiFax/Administration/AIAdministration",
+  title: "MedIngest/Administration/AIAdministration",
   component: AIAdministrationPage,
   parameters: {
     layout: "fullscreen",

@@ -14,7 +14,7 @@ from src.infrastructure.controllers.audit_controller import router as audit_rout
 from src.infrastructure.controllers.operations_controller import router as operations_router
 
 app = FastAPI(
-    title="DigiFax Backend REST API",
+    title="MedIngest Backend REST API",
     description="Hexagonal Clean Architecture backend for ingestion, extraction, and EHR delivery.",
     version="0.1.0",
 )
@@ -45,7 +45,7 @@ app.include_router(operations_router)
 @app.get("/")
 def health_check() -> dict[str, str]:
     """Exposes simple health and status checkpoints."""
-    return {"status": "healthy", "service": "digifax-api"}
+    return {"status": "healthy", "service": "medingest-api"}
 
 
 @app.get("/healthz")

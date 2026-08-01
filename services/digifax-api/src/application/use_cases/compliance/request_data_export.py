@@ -34,7 +34,7 @@ class RequestDataExportUseCase:
             "total": 2,
             "entry": [
                 {
-                    "fullUrl": f"http://digifax.io/fhir/Patient/{patient_id}",
+                    "fullUrl": f"http://medingest.io/fhir/Patient/{patient_id}",
                     "resource": {
                         "resourceType": "Patient",
                         "id": patient_id,
@@ -42,7 +42,7 @@ class RequestDataExportUseCase:
                     }
                 },
                 {
-                    "fullUrl": "http://digifax.io/fhir/Observation/obs-999",
+                    "fullUrl": "http://medingest.io/fhir/Observation/obs-999",
                     "resource": {
                         "resourceType": "Observation",
                         "id": "obs-999",

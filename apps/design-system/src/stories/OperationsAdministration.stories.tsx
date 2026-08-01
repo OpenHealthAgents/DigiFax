@@ -5,7 +5,7 @@ import PlatformOperationsPage from "../app/admin/operations/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof PlatformOperationsPage> = {
-  title: "DigiFax/Administration/OperationsAdministration",
+  title: "MedIngest/Administration/OperationsAdministration",
   component: PlatformOperationsPage,
   parameters: {
     layout: "fullscreen",

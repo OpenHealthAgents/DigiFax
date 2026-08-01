@@ -5,7 +5,7 @@ import TenantBrandingPage from "../app/admin/branding/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof TenantBrandingPage> = {
-  title: "DigiFax/Administration/TenantBranding",
+  title: "MedIngest/Administration/TenantBranding",
   component: TenantBrandingPage,
   parameters: {
     layout: "fullscreen",

@@ -27,7 +27,7 @@ class SsoAdapter(ISsoProvider):
         if tenant_id not in self._configs:
             raise ValueError(f"SSO is not configured for tenant: {tenant_id}")
         config = self._configs[tenant_id]
-        return f"{config.entry_point}?client_id=digifax&response_type=code"
+        return f"{config.entry_point}?client_id=medingest&response_type=code"
 
     def handle_callback_assertion(self, callback_data: dict[str, str]) -> dict[str, str]:
         """Validates SAML assertions/OIDC codes, returning user details."""

@@ -5,7 +5,7 @@ import KeyAdministrationPage from "../app/admin/keys/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof KeyAdministrationPage> = {
-  title: "DigiFax/Administration/KeyAdministration",
+  title: "MedIngest/Administration/KeyAdministration",
   component: KeyAdministrationPage,
   parameters: {
     layout: "fullscreen",

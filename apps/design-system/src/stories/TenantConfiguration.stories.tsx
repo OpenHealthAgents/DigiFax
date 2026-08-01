@@ -5,7 +5,7 @@ import SettingsPage from "../app/settings/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof SettingsPage> = {
-  title: "DigiFax/Administration/TenantConfiguration",
+  title: "MedIngest/Administration/TenantConfiguration",
   component: SettingsPage,
   parameters: {
     layout: "fullscreen",

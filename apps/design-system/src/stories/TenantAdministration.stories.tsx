@@ -15,7 +15,7 @@ import TenantAdminPage from "../app/admin/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof TenantAdminPage> = {
-  title: "DigiFax/Administration/TenantAdminConsole",
+  title: "MedIngest/Administration/TenantAdminConsole",
   component: TenantAdminPage,
   parameters: {
     layout: "fullscreen",

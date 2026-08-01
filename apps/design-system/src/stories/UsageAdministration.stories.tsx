@@ -5,7 +5,7 @@ import MeteringAdministrationPage from "../app/admin/metering/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof MeteringAdministrationPage> = {
-  title: "DigiFax/Administration/UsageAdministration",
+  title: "MedIngest/Administration/UsageAdministration",
   component: MeteringAdministrationPage,
   parameters: {
     layout: "fullscreen",

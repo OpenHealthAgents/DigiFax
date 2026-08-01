@@ -5,7 +5,7 @@ import AuditAdministrationPage from "../app/admin/audit/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof AuditAdministrationPage> = {
-  title: "DigiFax/Administration/AuditAdministration",
+  title: "MedIngest/Administration/AuditAdministration",
   component: AuditAdministrationPage,
   parameters: {
     layout: "fullscreen",

@@ -5,7 +5,7 @@ import FHIRAdministrationPage from "../app/admin/fhir/page";
 import "../app/globals.css";
 
 const meta: Meta<typeof FHIRAdministrationPage> = {
-  title: "DigiFax/Administration/FHIRAdministration",
+  title: "MedIngest/Administration/FHIRAdministration",
   component: FHIRAdministrationPage,
   parameters: {
     layout: "fullscreen",

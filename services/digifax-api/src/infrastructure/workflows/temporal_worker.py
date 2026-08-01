@@ -16,9 +16,9 @@ from src.application.workflows.document_pipeline import DocumentPipelineWorkflow
 logger = logging.getLogger(__name__)
 
 class TemporalWorkerManager:
-    """Manages connection and launch of Temporal Workers executing the DigiFax pipeline."""
+    """Manages connection and launch of Temporal Workers executing the MedIngest pipeline."""
 
-    def __init__(self, server_address: str = "localhost:7233", task_queue: str = "digifax-task-queue"):
+    def __init__(self, server_address: str = "localhost:7233", task_queue: str = "medingest-task-queue"):
         self.server_address = server_address
         self.task_queue = task_queue
 

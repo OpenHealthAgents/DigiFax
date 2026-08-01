@@ -22,11 +22,11 @@ def test_notification_value_object_validations() -> None:
 
     # 2. Negative escalation delays
     with pytest.raises(ValueError):
-        EscalationRule(-5, "EMAIL", "backup@digifax.io")
+        EscalationRule(-5, "EMAIL", "backup@medingest.io")
 
     # 3. Invalid escalation channel
     with pytest.raises(ValueError):
-        EscalationRule(10, "TELEPHONE", "backup@digifax.io")
+        EscalationRule(10, "TELEPHONE", "backup@medingest.io")
 
 
 def test_notifications_accrual_and_escalations() -> None:
@@ -55,7 +55,7 @@ def test_notifications_accrual_and_escalations() -> None:
     # 2. Test successful EMAIL dispatch
     req = send_use_case.execute(
         tenant_id=tenant_id,
-        recipient_id="doctor@digifax.io",
+        recipient_id="doctor@medingest.io",
         template_id="tpl_alert",
         template_params={"patient_name": "John Doe"},
         channels=["EMAIL"]
@@ -79,7 +79,7 @@ def test_notifications_accrual_and_escalations() -> None:
             {
                 "delay_minutes": 5,
                 "next_channel": "EMAIL",
-                "backup_recipient": "backup@digifax.io"
+                "backup_recipient": "backup@medingest.io"
             }
         ]
     )

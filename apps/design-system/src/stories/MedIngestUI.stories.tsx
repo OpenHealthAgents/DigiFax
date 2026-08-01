@@ -10,7 +10,7 @@ import { Terminal, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react
 import "../app/globals.css";
 
 const meta: Meta = {
-  title: "DigiFax/Primitives",
+  title: "MedIngest/Primitives",
   parameters: {
     layout: "centered",
   },

@@ -250,7 +250,7 @@ function App() {
       {/* Header Panel */}
       <header className="header">
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 className="workspace-title">DigiFax Reviewer Workspace</h1>
+          <h1 className="workspace-title">MedIngest Reviewer Workspace</h1>
           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
             ID: {documentId}
           </span>
