@@ -55,9 +55,30 @@ class IntakeDocument(AggregateRoot):
         storage_path: str,
         status: IntakeStatus = IntakeStatus.INGESTED
     ):
+        """
+        Initializes a new IntakeDocument instance.
+
+        Detailed Parameter Breakdown:
+          - id (str): The aggregate identity. This matches document_id generated globally.
+          - tenant_id (str): The multi-tenant partition key. This is critical for PostgreSQL
+            Row-Level Security (RLS) policies to avoid cross-tenant information disclosure.
+          - source (IntakeSource): The pathway source (e.g. FAX_UPLOAD, EMAIL_ATTACHMENT,
+            SCAN_UPLOAD, or API_UPLOAD). Tells the parsing worker which custom logic to use.
+          - metadata (FileMetadata): Encapsulates validated metadata including size, mime types,
+            extensions, and secure SHA-256 hash.
+          - storage_path (str): The logical S3 object storage location path.
+          - status (IntakeStatus): Tracks whether the document is successfully INGESTED or FAILED.
+        """
+        # Call the parent AggregateRoot constructor to initialize internal event list
+        # and set the core aggregate root ID.
         super().__init__(id)
+
+        # Enforce that every clinical entity MUST belong to a valid, non-blank tenant.
+        # Failing this assertion is treated as an illegal state boundary.
         if not tenant_id.strip():
             raise ValueError("tenant_id cannot be empty")
+
+        # Set domain fields ensuring strict logical segregation
         self.tenant_id = tenant_id
         self.source = source
         self.metadata = metadata

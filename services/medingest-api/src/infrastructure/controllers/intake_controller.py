@@ -84,9 +84,19 @@ async def upload_document(
 ) -> dict[str, str]:
     """
     Ingests manual user document uploads, verifying tenant active state.
+
+    Workflow breakdown:
+      - Validates permissions: 'Depends(require_permissions("document:write"))' ensures user has write authorization.
+      - Resolves Dependencies: Injecting IngestDocumentUseCase dynamically via FastAPI's Depend mechanism.
+      - Reads request files: Reads uploaded document file binary content.
+      - Executes command: Compiles parameters into IngestDocumentCommand DTO and runs the ingestion use case pipeline.
+      - Maps Exceptions: Catches DomainException and translates it to HTTP 400 Bad Request error detail.
     """
     try:
+        # Step A: Read incoming request file stream bytes
         content = await file.read()
+        
+        # Step B: Instantiate command transfer object encapsulating tenant scope and file metadata
         command = IngestDocumentCommand(
             context=context,
             filename=file.filename or "document.pdf",
@@ -94,9 +104,14 @@ async def upload_document(
             file_bytes=content,
             source=source
         )
+        
+        # Step C: Dispatch command to application core service layer
         doc_id = use_case.execute(command)
+        
+        # Return transactional success outcome
         return {"status": "success", "document_id": doc_id}
     except DomainException as e:
+        # Translate internal domain exception codes cleanly to JSON API spec responses
         raise HTTPException(status_code=400, detail={"message": e.message, "code": e.code})
 
 

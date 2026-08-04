@@ -29,6 +29,16 @@ class FileMetadata(ValueObject):
         size_bytes: int,
         hash_sha256: str
     ):
+        """
+        Initializes a FileMetadata instance and validates constraints.
+
+        Detailed Parameter/Assertion Breakdown:
+          - filename (str): Name of the file. Extends to extract file extension.
+          - content_type (str): MIME type string. Normalized to avoid format variance.
+          - size_bytes (int): Size of binary data. Must be greater than zero.
+          - hash_sha256 (str): Secure SHA-256 fingerprint used for deduplication audits.
+        """
+        # Step 1: Extract and validate file extension suffix
         ext = self._extract_extension(filename)
         if ext not in self.ALLOWED_EXTENSIONS:
             raise DomainException(
@@ -36,7 +46,7 @@ class FileMetadata(ValueObject):
                 code="UNSUPPORTED_FILE_TYPE"
             )
 
-        # Normalize mime type for variations (e.g. image/jpg -> image/jpeg)
+        # Step 2: Normalize and validate mime-type formats (e.g. mapping image/jpg -> image/jpeg)
         normalized_mime = content_type.lower().strip()
         if normalized_mime == "image/jpg":
             normalized_mime = "image/jpeg"
@@ -47,18 +57,21 @@ class FileMetadata(ValueObject):
                 code="UNSUPPORTED_MIME_TYPE"
             )
 
+        # Step 3: Validate file size boundary (must contain data payload)
         if size_bytes <= 0:
             raise DomainException(
                 message="File size must be positive and greater than zero.",
                 code="INVALID_FILE_SIZE"
             )
 
+        # Step 4: Validate hash existence (crucial to catch missing checksum bugs)
         if not hash_sha256:
             raise DomainException(
                 message="SHA-256 hash value must be provided.",
                 code="INVALID_HASH"
             )
 
+        # Assign properties to value object state
         self.filename = filename
         self.content_type = normalized_mime
         self.size_bytes = size_bytes

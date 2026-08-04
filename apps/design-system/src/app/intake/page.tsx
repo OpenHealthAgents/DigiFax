@@ -63,15 +63,20 @@ export default function IntakePage() {
    * and updates queue progress states.
    */
   const uploadFile = async (file: File) => {
+    // Step A: Generate a temporary client-side reference ID for progress indicator tracking
     const tempFileId = Math.random().toString();
+    
+    // Step B: Set up local workspace state for the incoming file session
     const newFile: UploadedFileType = {
       id: tempFileId,
       name: file.name,
       size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      progress: 20,
+      progress: 20, // Start with a generic mock visual upload progress of 20%
       status: "Processing",
       ocr: "Uploading..."
     };
+    
+    // Prepend this new card to the top of our queue list
     setUploadedFiles((prev) => [newFile, ...prev]);
 
     try {

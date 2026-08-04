@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
+  // Today's total document upload metric tracker state
   const [uploadsCount, setUploadsCount] = useState(48);
+
+  // Mock list representing recent ingested patient files in the dashboard queue.
+  // This state is mapped into standard tables to show ID, Demographics details, OCR and AI extraction accuracies.
   const [recentDocs, setRecentDocs] = useState([
     { id: "DF-9011", name: "Elizabeth Blackwell", type: "Blood Chemistry", time: "10m ago", status: "Awaiting Review", ocr: "96.4%", ai: "91.2%" },
     { id: "DF-9010", name: "Arthur Conan Doyle", type: "Lipid Profile", time: "25m ago", status: "Approved", ocr: "98.1%", ai: "94.5%" },
@@ -20,6 +24,8 @@ export default function DashboardPage() {
     { id: "DF-9008", name: "William Osler", type: "Metabolic Panel", time: "2h ago", status: "Approved", ocr: "95.5%", ai: "90.0%" },
   ]);
 
+  // Mock timeline logs representing system-level logs like EHR transaction events,
+  // OCR processing warnings, and schema validator updates.
   const recentActivity = [
     { text: "EHR transaction export success to Epic Sandbox", time: "5m ago", type: "success" },
     { text: "OCR threshold warning on DF-9009 (patient signature fuzzy)", time: "1h ago", type: "warning" },

@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from src.infrastructure.ehr.athena_exporter import AthenaExporter
 from src.infrastructure.ehr.bulk_fhir_exporter import BulkFhirExporter
 from src.infrastructure.ehr.cerner_exporter import CernerExporter
+from src.infrastructure.ehr.eclinicalworks_exporter import EClinicalWorksExporter
 from src.infrastructure.ehr.epic_exporter import EpicExporter
 from src.infrastructure.ehr.hapi_fhir_exporter import HapiFhirExporter
 from src.infrastructure.ehr.medplum_exporter import MedplumExporter
@@ -112,6 +113,47 @@ def test_athena_exporter(mock_post: MagicMock) -> None:
 
     res = exporter.export_bundle({"id": "note"}, "key-xyz")
     assert res["id"] == "athena-note-1"
+
+
+# --- 5b. eClinicalWorks Exporter Tests ---
+
+@patch("requests.post")
+def test_eclinicalworks_exporter(mock_post: MagicMock) -> None:
+    """
+    Verifies that the EClinicalWorksExporter correctly:
+      - Requests OAuth bearer tokens using client credentials.
+      - Appends custom facility headers and authentication tokens.
+      - Dispatches FHIR R4 clinical bundles to eCW endpoints.
+      - Validates and bypasses duplicate requests using transaction-level idempotency keys.
+    """
+    # 1. Setup mock HTTP response payloads (OAuth token first, then FHIR POST response)
+    mock_token_res = MagicMock()
+    mock_token_res.json.return_value = {"access_token": "ecw-token-123"}
+
+    mock_api_res = MagicMock()
+    mock_api_res.status_code = 200
+    mock_api_res.json.return_value = {"id": "ecw-bundle-res"}
+
+    # Configure patch side-effect to yield these mock responses sequentially
+    mock_post.side_effect = [mock_token_res, mock_api_res]
+
+    # 2. Instantiate exporter with custom routing tags (e.g. facility-id)
+    exporter = EClinicalWorksExporter(
+        auth_url="https://ecw.auth",
+        fhir_url="https://ecw.fhir",
+        client_id="ecw-client-id",
+        client_secret="ecw-client-secret",
+        custom_headers={"ecw-facility-id": "fac-9"}
+    )
+
+    # 3. Perform clinical bundle export and assert response attributes
+    bundle = {"resourceType": "Bundle", "id": "bundle-ecw"}
+    res = exporter.export_bundle(bundle, "key-ecw-1")
+    assert res["id"] == "ecw-bundle-res"
+
+    # 4. Perform duplicate check using same idempotency key and confirm bypass status
+    res_dup = exporter.export_bundle(bundle, "key-ecw-1")
+    assert res_dup["status"] == "duplicate_bypassed"
 
 
 # --- 6. SMART on FHIR Launch Flow Tests ---

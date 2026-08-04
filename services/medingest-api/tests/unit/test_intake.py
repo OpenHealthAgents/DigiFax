@@ -47,13 +47,21 @@ def test_file_metadata_validation_invalid_extension() -> None:
 # --- 2. IngestDocumentUseCase Multi-Tenant Tests ---
 
 def test_ingest_use_case_success() -> None:
+    """
+    Tests the standard Document Ingestion flow in a multi-tenant setup:
+      - Instantiates in-memory mock repositories and storage.
+      - Dispatches a command for an active tenant (tenant-123).
+      - Assets that the file is stored under tenant-segregated directory keys.
+      - Verifies that cross-tenant repository calls are blocked and return None.
+    """
+    # 1. Setup in-memory adapters mimicking clean domain dependency resolution
     repo = InMemoryIntakeDocumentRepository()
     tenant_repo = InMemoryTenantRepository()
     storage = InMemoryStorage()
     event_bus = InMemoryEventBus()
     use_case = IngestDocumentUseCase(repo, tenant_repo, storage, event_bus)
 
-    # Ingest document under active tenant-123 context
+    # 2. Compile valid Command payload under active tenant-123 identity
     context = TenantContext(tenant_id="tenant-123")
     command = IngestDocumentCommand(
         context=context,
@@ -63,19 +71,20 @@ def test_ingest_use_case_success() -> None:
         source="FAX_UPLOAD"
     )
 
+    # 3. Trigger execution on the orchestrating use case handler
     doc_id = use_case.execute(command)
 
-    # Enforce database partitioning - get_by_id returns document if tenant match
+    # 4. Assert that the record was correctly saved under the requesting tenant context
     saved_doc = repo.get_by_id(doc_id, "tenant-123")
     assert saved_doc is not None
     assert saved_doc.id == doc_id
     assert saved_doc.tenant_id == "tenant-123"
 
-    # Enforce database partitioning - get_by_id returns None on cross-tenant query
+    # 5. Verify database tenant partitioning constraint (querying with tenant-456 must yield None)
     cross_tenant_doc = repo.get_by_id(doc_id, "tenant-456")
     assert cross_tenant_doc is None
 
-    # Verify isolated physical path S3 storage save
+    # 6. Verify that raw file content is physically segregated inside isolated directories on storage
     expected_path = f"raw/tenant-123/{doc_id}.pdf"
     assert storage.get(expected_path, tenant_id="tenant-123") == b"mock pdf content"
 

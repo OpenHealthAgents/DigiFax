@@ -77,7 +77,8 @@ class IngestDocumentUseCase:
         """
         tenant_id = command.context.tenant_id
 
-        # Validate tenant status
+        # Step 1: Query tenant registration details from repository to assert active status.
+        # This prevents resource consumption (e.g. storage/S3/OCR runs) for inactive/deleted tenants.
         tenant = self.tenant_repository.get_by_id(tenant_id)
         if not tenant:
             raise DomainException(
@@ -85,13 +86,14 @@ class IngestDocumentUseCase:
                 code="TENANT_NOT_FOUND"
             )
 
+        # Verify billing or account suspension statuses
         if not tenant.is_active():
             raise DomainException(
                 message=f"Tenant account is suspended: {tenant_id}",
                 code="TENANT_SUSPENDED"
             )
 
-        # Validate intake source
+        # Step 2: Validate intake channel against the strict IntakeSource domain StrEnum
         try:
             source = IntakeSource(command.source)
         except ValueError as e:
@@ -100,11 +102,11 @@ class IngestDocumentUseCase:
                 code="INVALID_INTAKE_SOURCE"
             ) from e
 
-        # Calculate file size and sha-256 hash
+        # Step 3: Compute content attributes (byte length and SHA-256 check)
         size_bytes = len(command.file_bytes)
         hash_sha256 = hashlib.sha256(command.file_bytes).hexdigest()
 
-        # Validate file type / metadata
+        # Step 4: Validate file formatting standards (e.g., ext validation, MIME checks)
         metadata = FileMetadata(
             filename=command.filename,
             content_type=command.content_type,
@@ -112,9 +114,11 @@ class IngestDocumentUseCase:
             hash_sha256=hash_sha256
         )
 
+        # Step 5: Generate a secure unique identifier for the document session
         document_id = UniqueId.generate()
 
-        # Save raw file bytes to storage partitioned by tenant ID
+        # Step 6: Save raw content. Path is strictly partitioned by tenant ID to enforce
+        # logical/physical isolation bounds in the S3 directory.
         storage_path = f"raw/{tenant.id}/{document_id}.{metadata.extension}"
         resolved_path = self.storage.save(
             filepath=storage_path,
@@ -122,7 +126,7 @@ class IngestDocumentUseCase:
             tenant_id=tenant.id
         )
 
-        # Create aggregate and publish event
+        # Step 7: Instantiate aggregate root and trigger state transition event
         doc = IntakeDocument.create_ingested(
             id=document_id,
             tenant_id=tenant.id,
@@ -131,10 +135,11 @@ class IngestDocumentUseCase:
             storage_path=resolved_path
         )
 
-        # Save to database
+        # Step 8: Commit document entity metadata status to persistence repository
         self.repository.save(doc)
 
-        # Dispatch domain events
+        # Step 9: Dispatch accumulated domain events out to the system event bus
+        # to trigger asynchronous downstream operations (e.g., OCR, LLM structured data extraction)
         for event in doc.domain_events:
             self.event_bus.publish(event)
         doc.clear_domain_events()
