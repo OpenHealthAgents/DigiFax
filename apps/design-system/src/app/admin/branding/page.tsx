@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Tenant Branding Console.
+ * @description MedIngest Tenant Branding Console.
  * 
  * Provides style configuration forms allowing tenants to white-label portals: custom themes,
  * typography, support contact channels, email layouts, PDF reports headers/footers, and watermarks.
@@ -187,7 +187,7 @@ export default function TenantBrandingPage() {
         {/* PANEL HEADER */}
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Portal Customizer</h2>
-          <p className="text-sm text-muted-foreground">White-label your DigiFax portal. Configure styles, domain parameters, support channels, and PDF layouts.</p>
+          <p className="text-sm text-muted-foreground">White-label your MedIngest portal. Configure styles, domain parameters, support channels, and PDF layouts.</p>
         </div>
 
         {/* Global actions banner */}

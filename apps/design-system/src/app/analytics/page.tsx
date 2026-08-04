@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Observability Analytics Dashboard. Displays real-time operational metrics,
+ * @description MedIngest Observability Analytics Dashboard. Displays real-time operational metrics,
  * model accuracy parameters (OCR and AI confidence), processing durations, and operator output statistics.
  */
 

@@ -1,4 +1,4 @@
-# DigiFax Platform: Comprehensive Operations & Development Guide
+# medingest Platform: Comprehensive Operations & Development Guide
 
 This guide compiles developer onboarding tutorials, administrative configuration policies, production deployment architectures, migration strategies, and security profiles.
 
@@ -7,7 +7,7 @@ This guide compiles developer onboarding tutorials, administrative configuration
 ## 1. Developer Onboarding Guide
 
 ### Project Setup
-The DigiFax platform uses a monorepo workspace structure powered by `pnpm` (Next.js/React frontend) and Python `uv` (FastAPI backend).
+The medingest platform uses a monorepo workspace structure powered by `pnpm` (Next.js/React frontend) and Python `uv` (FastAPI backend).
 
 1. **Install Frontend Dependencies**:
    ```powershell
@@ -15,7 +15,7 @@ The DigiFax platform uses a monorepo workspace structure powered by `pnpm` (Next
    ```
 2. **Setup Backend Virtual Environment**:
    ```powershell
-   cd services/digifax-api
+   cd services/medingest-api
    uv venv
    .venv\Scripts\activate
    uv sync

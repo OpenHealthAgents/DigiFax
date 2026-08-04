@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "medingest.fullname" . }}-api
+  labels:
+    app: {{ include "medingest.fullname" . }}-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "medingest.fullname" . }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ include "medingest.fullname" . }}-api
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "medingest.fullname" . }}-config
+            - secretRef:
+                name: {{ include "medingest.fullname" . }}-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "medingest.fullname" . }}-api-service
+spec:
+  selector:
+    app: {{ include "medingest.fullname" . }}-api
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: 8000
+  type: {{ .Values.service.type }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "medingest.fullname" . }}-worker
+  labels:
+    app: {{ include "medingest.fullname" . }}-worker
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "medingest.fullname" . }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ include "medingest.fullname" . }}-worker
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "src/infrastructure/workflows/temporal_worker.py"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "medingest.fullname" . }}-config
+            - secretRef:
+                name: {{ include "medingest.fullname" . }}-secrets

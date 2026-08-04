@@ -1,6 +1,6 @@
 # Google Health Medical Data Toolkit: Architecture Analysis
 
-This document provides a comprehensive architectural and engineering analysis of the **Google Health Medical Data Toolkit** (MDT), cloned from [Google-Health/medical-data-toolkit](https://github.com/Google-Health/medical-data-toolkit). This analysis outlines the repository's directory layout, pipeline orchestration flow, reusable modules, terminology services, FHIR generation processes, validation mechanisms, extension points, and recommended integration patterns for **DigiFax**.
+This document provides a comprehensive architectural and engineering analysis of the **Google Health Medical Data Toolkit** (MDT), cloned from [Google-Health/medical-data-toolkit](https://github.com/Google-Health/medical-data-toolkit). This analysis outlines the repository's directory layout, pipeline orchestration flow, reusable modules, terminology services, FHIR generation processes, validation mechanisms, extension points, and recommended integration patterns for **medingest**.
 
 ---
 
@@ -115,7 +115,7 @@ medical-data-toolkit/
 
 ## 2. Pipeline Orchestration Flow
 
-When a client POSTs a medical document (PDF or image) to `/document_to_fhir`, the system executes a multi-step orchestration pipeline managed by [CompositeDocumentStandardizer](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/orchestrator/composite_document_standardizer.py):
+When a client POSTs a medical document (PDF or image) to `/document_to_fhir`, the system executes a multi-step orchestration pipeline managed by [CompositeDocumentStandardizer](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/orchestrator/composite_document_standardizer.py):
 
 ```mermaid
 flowchart TD
@@ -137,10 +137,10 @@ flowchart TD
 ```
 
 1. **Ingest & Pre-process**: The server validates the file bytes, detects the mime type (`application/pdf`, `image/png`, or `image/jpeg`), and converts PDF pages to 300 DPI PNG images using `pdf_util` (backed by a thread-safe lock around PDFium).
-2. **Document Classification**: The `MultiDocumentClassifier` uses a vision-capable LLM and a Jinja2 template ([composite_document_classification.jinja2](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/classification/suggested_prompts/composite_document_classification.jinja2)) to analyze the document. It detects where records split and classifies page ranges (e.g., Pages 1-2: `LABORATORY_REPORT`, Page 3: `PRESCRIPTION`).
+2. **Document Classification**: The `MultiDocumentClassifier` uses a vision-capable LLM and a Jinja2 template ([composite_document_classification.jinja2](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/classification/suggested_prompts/composite_document_classification.jinja2)) to analyze the document. It detects where records split and classifies page ranges (e.g., Pages 1-2: `LABORATORY_REPORT`, Page 3: `PRESCRIPTION`).
 3. **Partitioning Policy**: Segments are partitioned based on `document_standardization_policy` (e.g., `ACCEPT_ALL`, `ALLOW_ONLY_SUPPORTED`). Supported segments proceed; unsupported ones are filtered or passed through.
 4. **Parallel Segment Standardization**: The standardizer spawns parallel worker threads to process each document segment through three phases:
-   - **Extraction**: The segment images are sent to the LLM along with the document type's schema (e.g., `AbdmLabReport` Pydantic model) and a prompt ([lab_report.jinja2](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/extraction/suggested_prompts/lab_report.jinja2)) to extract a structured JSON representation of patient details, providers, and test measurements.
+   - **Extraction**: The segment images are sent to the LLM along with the document type's schema (e.g., `AbdmLabReport` Pydantic model) and a prompt ([lab_report.jinja2](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/extraction/suggested_prompts/lab_report.jinja2)) to extract a structured JSON representation of patient details, providers, and test measurements.
    - **Terminology Mapping**: The system walks the Pydantic tree recursively, finding `LabTest` objects. It queries a local, pre-computed LOINC knowledge base to resolve and inject the correct LOINC codes in-place.
    - **FHIR Generation**: Converts the structured Pydantic model into a formal FHIR Document Bundle (containing Patient, Composition, Practitioner, Organization, Encounter, DiagnosticReport, and Observation resources) using deterministic conversion rules.
 5. **Bundle Enrichment**: If configured, the base64-encoded source document bytes are attached to the first patient bundle as a `DocumentReference` and linked in the `Composition` resource.
@@ -211,7 +211,7 @@ flowchart LR
 
 An offline pipeline processes the official LOINC table CSV using LLM workers to precompute axes:
 
-- **Core Analyte Builder** (`axes_kb/core_analyte/builder.py`): Normalizes raw LOINC components into canonical "Core Analytes" (e.g. `Glucose.urine` -> `Glucose`) and extracts synonyms using a structured prompt ([prompt.py](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/prompt.py)).
+- **Core Analyte Builder** (`axes_kb/core_analyte/builder.py`): Normalizes raw LOINC components into canonical "Core Analytes" (e.g. `Glucose.urine` -> `Glucose`) and extracts synonyms using a structured prompt ([prompt.py](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/prompt.py)).
 - **System Builder** (`axes_kb/system/builder.py`): Maps specimen names to standard LOINC system terms (e.g., `blood` -> `Bld`, `plasma` -> `Plas`, `urine` -> `Ur`).
 - **Property Builder** (`axes_kb/property/builder.py`): Maps measurement units to standard LOINC property classes (e.g., `mg/dL` -> `MCnc` [Mass Concentration], `mEq/L` -> `SCnc` [Substance Concentration]).
 
@@ -219,7 +219,7 @@ The output of these builders is a set of enriched CSV files (such as `analyte_re
 
 ### B. Anagram Signature Matching
 
-To perform high-recall matching on noisy clinical text (arising from OCR errors, spelling variants, or word order swaps), the [AnalytesIndex](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/index.py) standardizes text into a signature:
+To perform high-recall matching on noisy clinical text (arising from OCR errors, spelling variants, or word order swaps), the [AnalytesIndex](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/index.py) standardizes text into a signature:
 
 1. Standardizes immune markers (e.g., `Ags` -> `Antigen`, `IgG` -> `Immunoglobulin G`) and strips taxonomic modifiers (like `virus` or `spp.`).
 2. Lowercases the string and strips spacing around symbols (e.g. `CD4 / CD8` -> `cd4/cd8`).
@@ -230,7 +230,7 @@ To perform high-recall matching on noisy clinical text (arising from OCR errors,
 
 ### C. Active Learning Flywheel
 
-Rather than continuously updating LLM prompts for new abbreviations, the system defines an **Active Learning Loop** in [normalize.py](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/normalize.py):
+Rather than continuously updating LLM prompts for new abbreviations, the system defines an **Active Learning Loop** in [normalize.py](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/axes_kb/core_analyte/normalize.py):
 
 1. **Monitor**: Log raw core analytes that fail the offline fuzzy signature search and trigger LLM runtime fallbacks.
 2. **Analyze**: Aggregate and review these failed strings.
@@ -238,7 +238,7 @@ Rather than continuously updating LLM prompts for new abbreviations, the system 
 
 ### D. Axis-Filtering ("Soft Filtering")
 
-The [LoincQueryEngine](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/query.py) applies axes mappers to filter candidate list matching the signature:
+The [LoincQueryEngine](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/medical_coding/loinc/query.py) applies axes mappers to filter candidate list matching the signature:
 
 - **System Filter**: Filters candidates by canonical system mapped from specimen.
 - **Scale Filter**: If result is numeric, filters to `Qn` (Quantitative) scale. If result matches terms like "positive", filters to `Ord` (Ordinal).
@@ -262,7 +262,7 @@ The toolkit generates FHIR resources deterministically from structured Pydantic 
 
 ### A. Resource Mappings
 
-The [AbdmLabReportFhirGenerator](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/fhir/abdm/abdm_lab_report_fhir_generator.py) translates schemas to FHIR resources:
+The [AbdmLabReportFhirGenerator](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/fhir/abdm/abdm_lab_report_fhir_generator.py) translates schemas to FHIR resources:
 
 - **`Patient`** $\rightarrow$ **`Patient`**: Maps name, date of birth, gender, and MRNs to the ABDM Patient Profile.
 - **`Practitioner`** $\rightarrow$ **`Practitioner`**: Maps practitioner name and medical license identifiers (ABDM MD ID).
@@ -282,7 +282,7 @@ Instead of building unstructured JSON dictionaries, the generator instantiates P
 
 ### C. Attachment of Source Documents
 
-If `ATTACH_DOCUMENT_TO_BUNDLE` is enabled, the [abdm_bundle_enricher](file:///d:/Kalyan/DigiFax/medical-data-toolkit/src/document_to_fhir/core/fhir/abdm/abdm_bundle_enricher.py) runs:
+If `ATTACH_DOCUMENT_TO_BUNDLE` is enabled, the [abdm_bundle_enricher](file:///d:/Kalyan/medingest/medical-data-toolkit/src/document_to_fhir/core/fhir/abdm/abdm_bundle_enricher.py) runs:
 
 1. Converts the generated bundle JSON back to a protobuf message.
 2. Checks if the profile is a `DiagnosticReportRecord`.
@@ -398,20 +398,20 @@ graph TD
 
 ---
 
-## 9. Recommended Integration Points for DigiFax
+## 9. Recommended Integration Points for medingest
 
-DigiFax is a digital fax ingestion system. Faxes are generally unstructured, multi-page PDFs or images containing scanned lab reports, outpatient letters, and prescriptions. Integrating the Medical Data Toolkit provides a robust pipeline for digitizing these documents.
+medingest is a digital fax ingestion system. Faxes are generally unstructured, multi-page PDFs or images containing scanned lab reports, outpatient letters, and prescriptions. Integrating the Medical Data Toolkit provides a robust pipeline for digitizing these documents.
 
 Here are the recommended integration points and architecture patterns:
 
 ### A. Core Architecture Design
 
-To process fax documents, DigiFax should route inbound faxes through the toolkit pipeline:
+To process fax documents, medingest should route inbound faxes through the toolkit pipeline:
 
 ```mermaid
 flowchart LR
     Inbound[Inbound Fax: TIFF/PDF] --> Queue[ActiveMQ / RabbitMQ]
-    Queue --> Worker[DigiFax Ingestion Worker]
+    Queue --> Worker[medingest Ingestion Worker]
     Worker --> PDF_Render[Pre-process: Convert TIFF/PDF pages to PNG]
     PDF_Render --> MDT_Server[MDT REST Container: /document_to_fhir]
     MDT_Server -- Returns FHIR Document Bundle --> Review{Human-in-the-Loop Review}
@@ -423,16 +423,16 @@ flowchart LR
 
 #### Option 1: Sidecar Container REST API (Recommended)
 
-Deploy the toolkit as a separate container alongside the DigiFax backend (e.g. running on Cloud Run, Kubernetes, or AWS ECS).
+Deploy the toolkit as a separate container alongside the medingest backend (e.g. running on Cloud Run, Kubernetes, or AWS ECS).
 
 - **Integration Interface**: HTTP POST request to `/document_to_fhir`.
 - **Payload**: Raw fax PDF bytes or image bytes.
 - **Headers**: Include `Content-Type: application/pdf` or `image/png`, and `Job-Id: <fax_transmission_id>` to log diagnostic traces.
-- **Pros**: Decouples dependencies (e.g. prevents conflicts with DigiFax's Python environment or protobuf versions) and allows independent scaling.
+- **Pros**: Decouples dependencies (e.g. prevents conflicts with medingest's Python environment or protobuf versions) and allows independent scaling.
 
 #### Option 2: Direct Python Library Import
 
-If DigiFax is built as a Python application, import the modules directly.
+If medingest is built as a Python application, import the modules directly.
 
 - **Code Example**:
   ```python
@@ -446,7 +446,7 @@ If DigiFax is built as a Python application, import the modules directly.
   # Run directly within your execution threads
   ```
 - **Pros**: Avoids network latency of REST calls.
-- **Cons**: DigiFax must use compatible package versions (particularly Pydantic v2 and Protobuf v4, which can be restrictive).
+- **Cons**: medingest must use compatible package versions (particularly Pydantic v2 and Protobuf v4, which can be restrictive).
 
 ### C. Addressing Key Fax Processing Challenges
 
@@ -464,9 +464,9 @@ Scanned faxes often contain handwritten doctor notes or signatures.
 
 - **Challenge**: LLM extraction from handwriting has lower accuracy, and the toolkit does not natively support mapping handwritten values.
 - **Recommendation**: Leverage the built-in handwriting detection. When a segment's `handwritten_content_percent` exceeds the configured threshold, the classifier labels it as `HANDWRITTEN`.
-- **Implementation**: Route segments classified as `HANDWRITTEN` to a **Human-in-the-Loop (HITL) Queue** in DigiFax for manual transcription rather than attempting automatic FHIR conversion.
+- **Implementation**: Route segments classified as `HANDWRITTEN` to a **Human-in-the-Loop (HITL) Queue** in medingest for manual transcription rather than attempting automatic FHIR conversion.
 
 #### 3. Regional Context and Profiles
 
 - **Challenge**: The toolkit's default FHIR generator targets Indian ABDM profiles.
-- **Recommendation**: If DigiFax serves US-based providers, extend the FHIR generation layer. Create a US Core generator class (using US Core Patient and DiagnosticReport profiles) in `src/document_to_fhir/core/fhir/us_core/` and swap the default ABDM generator in `config.yaml`.
+- **Recommendation**: If medingest serves US-based providers, extend the FHIR generation layer. Create a US Core generator class (using US Core Patient and DiagnosticReport profiles) in `src/document_to_fhir/core/fhir/us_core/` and swap the default ABDM generator in `config.yaml`.

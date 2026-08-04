@@ -6,7 +6,7 @@ This document details the multi-tenant SaaS subscription tiers, operational quot
 
 ## 1. Subscription Tiers & Quota Matrix
 
-The DigiFax platform partitions services into three standard licensing tiers:
+The medingest platform partitions services into three standard licensing tiers:
 
 | Tier | Monthly Price | Storage Quota | OCR Quota | API Quota | Document Quota |
 | :--- | :--- | :--- | :--- | :--- | :--- |

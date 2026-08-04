@@ -40,17 +40,17 @@ jobs:
 
       - name: Install Python Dependencies
         run: uv sync --frozen --dev
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api
 
       - name: Run Ruff Linter & Format Check
         run: |
           uv run ruff check .
           uv run ruff format --check .
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api
 
       - name: Run mypy Type Checking
         run: uv run mypy src
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api
 
   unit-tests:
     name: Backend Unit Tests
@@ -70,8 +70,8 @@ jobs:
 
       - name: Install Python Dependencies
         run: uv sync --frozen --dev
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api
 
       - name: Run pytest
         run: uv run pytest --cov=src --cov-report=xml
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api

@@ -8,7 +8,7 @@ The **Audit & Governance** Bounded Context logs user activities, key rotations, 
 
 ```mermaid
 graph TD
-    System([DigiFax Pipelines]) -->|Trigger Event| API[Audit API Router]
+    System([medingest Pipelines]) -->|Trigger Event| API[Audit API Router]
     API -->|1. log_event| LogUseCase[LogAuditEventUseCase]
     LogUseCase -->|Get last hash| Repo[IAuditRepository]
     LogUseCase -->|2. Compute SHA256 chain log_hash| Event[AuditEvent Aggregate]

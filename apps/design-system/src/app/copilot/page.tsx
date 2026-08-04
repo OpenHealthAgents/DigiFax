@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Clinical AI Copilot Workspace. Implements a multi-column chat helper
+ * @description MedIngest Clinical AI Copilot Workspace. Implements a multi-column chat helper
  * for explaining terminology mappings, summarizing documents, and detailing US Core validation failures.
  */
 

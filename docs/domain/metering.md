@@ -8,7 +8,7 @@ The **Usage Metering** Bounded Context tracks tenant transactions during active 
 
 ```mermaid
 graph TD
-    System([DigiFax Pipelines]) -->|Record Usage Event| API[Metering API Controller]
+    System([medingest Pipelines]) -->|Record Usage Event| API[Metering API Controller]
     API -->|1. record_metric| UseCase[RecordUsageEventUseCase]
     UseCase -->|2. get / init summary| Repo[IUsageMeteringRepository]
     Repo -->|Persist summary| DB[(InMemory Persistence Store)]

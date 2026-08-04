@@ -9,7 +9,7 @@ This document details the multi-tenant directory partitioning strategy, encrypti
 To guarantee absolute data isolation, all raw fax files and clinical parsing outcomes are physically structured using a tenant-namespaced directory layout:
 
 ```
-  s3://digifax-clinical-bucket/
+  s3://medingest-clinical-bucket/
        ├── documents/
        │     ├── tenant-abc/
        │     │     ├── doc-11111.pdf

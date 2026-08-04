@@ -1,6 +1,6 @@
 # Multi-Tenant Bounded Contexts Refactoring
 
-This document details the tenant awareness modifications implemented across every bounded context in the DigiFax platform.
+This document details the tenant awareness modifications implemented across every bounded context in the medingest platform.
 
 ---
 
@@ -8,7 +8,7 @@ This document details the tenant awareness modifications implemented across ever
 
 To enable asynchronous event-driven pipelines (e.g. queueing faxes for AI extraction or OCR parsing) to respect strict tenant partitioning:
 * **The Rule**: No domain event may exist without a matching `tenant_id` context.
-* **Base DomainEvent Class** ([domain_event.py](file:///d:/Kalyan/DigiFax/services/digifax-api/src/domain/common/domain_event.py)):
+* **Base DomainEvent Class** ([domain_event.py](file:///d:/Kalyan/medingest/services/medingest-api/src/domain/common/domain_event.py)):
   * Updated constructor to require `tenant_id` string and enforce validation:
     ```python
     class DomainEvent(ABC):

@@ -1,12 +1,12 @@
 # Multi-Tenant Domain Events & Consumer Isolation
 
-This document specifies the tracing metadata schema, event structures, and consumer tenant isolation guards designed for the DigiFax platform.
+This document specifies the tracing metadata schema, event structures, and consumer tenant isolation guards designed for the medingest platform.
 
 ---
 
 ## 1. Unified Tracing Metadata Schema
 
-All domain events emitted by aggregate roots in DigiFax must carry complete context tracking attributes to ensure audits and transactions are fully traceable.
+All domain events emitted by aggregate roots in medingest must carry complete context tracking attributes to ensure audits and transactions are fully traceable.
 
 ### 1.1 Metadata Attributes:
 * `tenant_id` (`str`): Mandatory SaaS subscriber partition ID.

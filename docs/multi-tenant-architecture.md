@@ -1,13 +1,13 @@
-# DigiFax Multi-Tenant SaaS Architecture Design Specification
+# medingest Multi-Tenant SaaS Architecture Design Specification
 
-This document defines the architectural blueprints, hierarchical structures, isolation patterns, and scaling strategies used to transition DigiFax from a single-tenant document intake workflow to an enterprise-grade, multi-tenant SaaS platform.
+This document defines the architectural blueprints, hierarchical structures, isolation patterns, and scaling strategies used to transition medingest from a single-tenant document intake workflow to an enterprise-grade, multi-tenant SaaS platform.
 
 ---
 
 ## 1. Architectural Model & Domain Model
 
 ### 1.1 Tenant Model
-DigiFax uses a **Logical Partitioning Multi-Tenancy Model** (Pooled Compute and Pooled/Partitioned Database) by default, with support for hybrid deployments. A `Tenant` represents an independent corporate entity subscribing to the SaaS platform (e.g., a hospital network or clinical group).
+medingest uses a **Logical Partitioning Multi-Tenancy Model** (Pooled Compute and Pooled/Partitioned Database) by default, with support for hybrid deployments. A `Tenant` represents an independent corporate entity subscribing to the SaaS platform (e.g., a hospital network or clinical group).
 
 * **Tenant Identity**: Globally unique identifier (`tenant_id` UUIDv4) associated with a canonical organization name, billing tier, and administrative contact.
 * **Tenant Configuration**: Extensible, tenant-scoped configurations controlling daily ingestion limits, allowed MIME formats, target EHR endpoint parameters (Epic, Athena, Cerner), and LLM/OCR fallback models.
@@ -132,8 +132,8 @@ Compute resources are pooled, utilizing shared processes. The active tenant cont
 ### 4.2 Storage Isolation
 Files (PDFs, TIFFs, JSON metadata) are stored in shared object storage buckets (AWS S3 / Google Cloud Storage) partitioned by tenant prefix:
 ```
-s3://digifax-intake-storage/raw/{tenant_id}/{document_id}.pdf
-s3://digifax-intake-storage/processed/{tenant_id}/{document_id}_ocr.json
+s3://medingest-intake-storage/raw/{tenant_id}/{document_id}.pdf
+s3://medingest-intake-storage/processed/{tenant_id}/{document_id}_ocr.json
 ```
 The object storage IAM policies use directory-level prefixes to ensure that temporary pre-signed URLs or worker jobs can only read/write files scoped within the active `tenant_id`.
 
@@ -221,7 +221,7 @@ graph TD
 ## 6. Deployment & Scaling Strategies
 
 ### 6.1 Deployment Options
-Depending on the customer's size and compliance requirements, DigiFax supports three deployment layouts:
+Depending on the customer's size and compliance requirements, medingest supports three deployment layouts:
 
 | Model | Compute | Database | Target Customer | Cost Efficiency | Isolation Guarantee |
 | :--- | :--- | :--- | :--- | :--- | :--- |

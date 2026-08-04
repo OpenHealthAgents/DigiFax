@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Ingestion Workspace. Manages document intake pipelines, including manual uploads,
+ * @description MedIngest Ingestion Workspace. Manages document intake pipelines, including manual uploads,
  * drag-and-drop triggers, metadata parsing previews, duplicate warn blocks, and backend uploads connector.
  */
 
@@ -44,6 +44,7 @@ export default function IntakePage() {
   const [patientSearch, setPatientSearch] = useState("Elizabeth Blackwell");
   const [selectedOrg, setSelectedOrg] = useState("OpenHealth Hospital");
   const [docType, setDocType] = useState("Lab Report");
+  const [sourceChannel, setSourceChannel] = useState("FAX_UPLOAD");
 
   // Track hover state when dragging faxes
   const handleDrag = (e: React.DragEvent) => {
@@ -76,7 +77,7 @@ export default function IntakePage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("source", "API_UPLOAD");
+      formData.append("source", sourceChannel);
 
       // Executes the fetch API proxy call to FastAPI
       const response = await fetch("/api/intake/upload", {
@@ -137,7 +138,7 @@ export default function IntakePage() {
         {/* Workspace Title bar */}
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Document Intake Workspace</h2>
-          <p className="text-sm text-muted-foreground">Upload and catalog clinical fax documents in batch streams.</p>
+          <p className="text-sm text-muted-foreground">Upload and catalog clinical documents (faxes, email attachments, scanned files) in batch streams.</p>
         </div>
 
         {/* Master layout split grid */}
@@ -157,7 +158,7 @@ export default function IntakePage() {
               }`}
             >
               <UploadCloud className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="font-semibold text-lg">Drag & Drop Fax Documents Here</p>
+              <p className="font-semibold text-lg">Drag & Drop Clinical Documents Here</p>
               <p className="text-xs text-muted-foreground mt-2">Supports PDF, TIFF, PNG up to 25MB per file</p>
               
               {/* Invisible file input trigger */}
@@ -274,6 +275,19 @@ export default function IntakePage() {
                     <label className="text-xs font-semibold uppercase text-muted-foreground">Document Type</label>
                     <Input value={docType} onChange={(e) => setDocType(e.target.value)} />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold uppercase text-muted-foreground">Intake Source Channel</label>
+                    <select
+                      value={sourceChannel}
+                      onChange={(e) => setSourceChannel(e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <option value="FAX_UPLOAD">Fax Inbound</option>
+                      <option value="EMAIL_ATTACHMENT">Email Attachment</option>
+                      <option value="SCAN_UPLOAD">Scanned Document</option>
+                      <option value="API_UPLOAD">API Upload</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Processing phases */}
@@ -290,7 +304,7 @@ export default function IntakePage() {
 
                 {/* Confirmations */}
                 <div className="flex justify-end pt-4 space-x-2">
-                  <Button variant="outline">Discard Fax</Button>
+                  <Button variant="outline">Discard Document</Button>
                   <Button variant="default">Verify Metadata</Button>
                 </div>
 

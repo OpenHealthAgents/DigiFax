@@ -1,17 +1,17 @@
 # OpenSearch Indexing & Multi-Tenant Filtering Strategy
 
-This document details the multi-tenant indexing architecture, search configurations, k-NN vector filters, and security parameters implemented for the DigiFax platform.
+This document details the multi-tenant indexing architecture, search configurations, k-NN vector filters, and security parameters implemented for the medingest platform.
 
 ---
 
 ## 1. Multi-Tenant Index Architecture
 
-OpenSearch supports multi-tenancy through two main patterns. We evaluated both for DigiFax:
+OpenSearch supports multi-tenancy through two main patterns. We evaluated both for medingest:
 
 | Strategy | Description | Pros | Cons |
 | :--- | :--- | :--- | :--- |
-| **Shared Index with Term Filters** | A single unified index (`digifax-documents`) where every document carries a `tenant_id` field. Queries strictly enforce matching filters. | Cost-effective, easy alias management, fast mapping changes. | Logical isolation requires diligent queries implementation. |
-| **Index per Tenant** | Separate indexes dynamically named (e.g., `digifax-documents-{tenant_id}`). | Hard physical isolation at the index layer. | High resource overhead (shard limits), complex mappings management. |
+| **Shared Index with Term Filters** | A single unified index (`medingest-documents`) where every document carries a `tenant_id` field. Queries strictly enforce matching filters. | Cost-effective, easy alias management, fast mapping changes. | Logical isolation requires diligent queries implementation. |
+| **Index per Tenant** | Separate indexes dynamically named (e.g., `medingest-documents-{tenant_id}`). | Hard physical isolation at the index layer. | High resource overhead (shard limits), complex mappings management. |
 
 ### 1.1 Recommendation & Implementation
 We implemented **Shared Index with Term Filters**. To prevent cross-tenant queries, the search port interface mandates `tenant_id` scopes. This is supplemented at the API layer where search controllers derive `tenant_id` directly from authenticated requests.

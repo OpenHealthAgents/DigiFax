@@ -1,4 +1,4 @@
-const CACHE_NAME = "digifax-offline-cache-v1";
+const CACHE_NAME = "medingest-offline-cache-v1";
 const OFFLINE_URLS = [
   "/",
   "/design-system",

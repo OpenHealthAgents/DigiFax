@@ -1,9 +1,9 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: digifax-postgres
+    container_name: medingest-postgres
     environment:
-      POSTGRES_DB: digifax
+      POSTGRES_DB: medingest
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
     ports:
@@ -11,14 +11,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d digifax"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d medingest"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: digifax-rabbitmq
+    container_name: medingest-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -33,7 +33,7 @@ services:
 
   localstack:
     image: localstack/localstack:latest
-    container_name: digifax-s3
+    container_name: medingest-s3
     ports:
       - "4566:4566"
     environment:
@@ -55,15 +55,15 @@ services:
     # Depends on mounting top_2000 index CSV files locally
     # command: ./start_server.sh --config_file=src/config.yaml
 
-  digifax-api:
+  medingest-api:
     build:
       context: .
       dockerfile: ./docker/api.Dockerfile
-    container_name: digifax-api
+    container_name: medingest-api
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/digifax
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/medingest
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - S3_ENDPOINT_URL=http://localstack:4566
@@ -74,13 +74,13 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  digifax-worker:
+  medingest-worker:
     build:
       context: .
       dockerfile: ./docker/worker.Dockerfile
-    container_name: digifax-worker
+    container_name: medingest-worker
     environment:
-      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/digifax
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/medingest
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - S3_ENDPOINT_URL=http://localstack:4566

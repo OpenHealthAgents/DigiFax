@@ -1,14 +1,14 @@
-# DigiFax Digital Fax Ingestion System: Architecture Design
+# medingest Digital Fax Ingestion System: Architecture Design
 
-This document details the architectural and engineering design for **DigiFax**, a digital fax ingestion, processing, and electronic health record (EHR) transmission system. The architecture is designed to handle unstructured clinical faxes by combining **Clean Architecture**, **Domain-Driven Design (DDD)**, **Hexagonal (Ports and Adapters) Architecture**, **SOLID Principles**, and **Event-Driven Architecture (EDA)**.
+This document details the architectural and engineering design for **medingest**, a digital fax ingestion, processing, and electronic health record (EHR) transmission system. The architecture is designed to handle unstructured clinical faxes by combining **Clean Architecture**, **Domain-Driven Design (DDD)**, **Hexagonal (Ports and Adapters) Architecture**, **SOLID Principles**, and **Event-Driven Architecture (EDA)**.
 
-To automate document classification, data extraction, and clinical coding, DigiFax integrates the **Google Health Medical Data Toolkit (MDT)** as a core adapter.
+To automate document classification, data extraction, and clinical coding, medingest integrates the **Google Health Medical Data Toolkit (MDT)** as a core adapter.
 
 ---
 
 ## 1. Architectural Philosophy & Principles
 
-The DigiFax architecture enforces strict boundaries between business logic and infrastructure.
+The medingest architecture enforces strict boundaries between business logic and infrastructure.
 
 ```mermaid
 graph TD
@@ -85,7 +85,7 @@ graph TD
 
 ## 2. Domain Model & Aggregates
 
-DigiFax is decomposed into three main Bounded Contexts: **Ingestion**, **Processing**, and **Clinical Validation (Human-in-the-Loop)**.
+medingest is decomposed into three main Bounded Contexts: **Ingestion**, **Processing**, and **Clinical Validation (Human-in-the-Loop)**.
 
 ```mermaid
 classDiagram
@@ -194,7 +194,7 @@ Domain events are immutable structures capturing business actions. They decouple
 
 ### A. Level 1: System Context Diagram
 
-Shows how the DigiFax system interacts with users and external services.
+Shows how the medingest system interacts with users and external services.
 
 ```mermaid
 graph TD
@@ -205,26 +205,26 @@ graph TD
     ClinicSender[("Clinic / Hospital Fax Machine")]:::person
     StaffReviewer[("Clinical Staff (Reviewer)")]:::person
 
-    DigiFax["DigiFax System\n(Ingests faxes, digitizes, extracts FHIR)"]:::system
+    medingest["medingest System\n(Ingests faxes, digitizes, extracts FHIR)"]:::system
 
     TwilioGateway["Telephony Gateway\n(e.g., etherFAX, Twilio FoIP)"]:::extSystem
     MdtContainer["Google Health Medical Data Toolkit\n(REST Extraction / Terminology)"]:::extSystem
     EhrSystem["Target EHR System\n(Epic, Cerner, FHIR Server)"]:::extSystem
 
     ClinicSender -- Transmits fax over PSTN/FoIP --> TwilioGateway
-    TwilioGateway -- Routes SIP/Webhook --> DigiFax
-    StaffReviewer -- Reviews and validates extracted data --> DigiFax
-    DigiFax -- Calls standardization / LOINC mapping --> MdtContainer
-    DigiFax -- Transmits validated FHIR Bundles --> EhrSystem
+    TwilioGateway -- Routes SIP/Webhook --> medingest
+    StaffReviewer -- Reviews and validates extracted data --> medingest
+    medingest -- Calls standardization / LOINC mapping --> MdtContainer
+    medingest -- Transmits validated FHIR Bundles --> EhrSystem
 
     class ClinicSender,StaffReviewer person;
-    class DigiFax system;
+    class medingest system;
     class TwilioGateway,MdtContainer,EhrSystem extSystem;
 ```
 
 ### B. Level 2: Container Diagram
 
-Decomposes DigiFax into distinct deployable processes and storage nodes.
+Decomposes medingest into distinct deployable processes and storage nodes.
 
 ```mermaid
 graph TD
@@ -237,7 +237,7 @@ graph TD
     Mdt["Medical Data Toolkit REST API"]:::ext
     Clinician["Clinical Staff Web Browser"]:::ext
 
-    subgraph "DigiFax System Boundaries"
+    subgraph "medingest System Boundaries"
         Nginx["API Gateway & Static Server\n(Nginx)"]:::container
         Spa["Review Portal SPA\n(React/JS)"]:::container
         WebApi["Hexagonal API Container\n(Python/FastAPI)"]:::container
@@ -502,10 +502,10 @@ sequenceDiagram
 
 ## 5. Directory Layout for Implementation
 
-Following Hexagonal Architecture and Domain-Driven Design, the DigiFax project codebase is structured as follows:
+Following Hexagonal Architecture and Domain-Driven Design, the medingest project codebase is structured as follows:
 
 ```directory
-digifax/
+medingest/
 ├── config/                         # Deployment environment settings (Dev, Staging, Prod)
 ├── docker/                         # Dockerfiles for API, Worker, and Nginx reverse proxy
 └── src/                            # Application source
@@ -579,7 +579,7 @@ digifax/
 
 ## 6. Implementation Detail: Dependency Injection & Inversion
 
-To ensure the Domain and Application layers are decoupled from framework implementations, DigiFax uses the **Dependency Inversion Principle**. Below is a Python example of use case wiring utilizing the Dependency Injection pattern:
+To ensure the Domain and Application layers are decoupled from framework implementations, medingest uses the **Dependency Inversion Principle**. Below is a Python example of use case wiring utilizing the Dependency Injection pattern:
 
 ```python
 # =====================================================================
@@ -689,7 +689,7 @@ class ProcessFaxCommandHandler:
 
 ## 7. Implementation Detail: CQRS & Unit of Work
 
-To optimize performance and database concurrency, DigiFax decouples commands (writes) from queries (reads):
+To optimize performance and database concurrency, medingest decouples commands (writes) from queries (reads):
 
 1. **Command Side**:
    - Executed using the `UnitOfWork` (e.g. `SqlAlchemyUnitOfWork`).
@@ -704,7 +704,7 @@ To optimize performance and database concurrency, DigiFax decouples commands (wr
 
 ## 8. Clinical Faxing Safeguards (SOLID Application)
 
-Faxes contain messy layouts, handwriting, and noise. DigiFax handles these edge cases using specific safeguards:
+Faxes contain messy layouts, handwriting, and noise. medingest handles these edge cases using specific safeguards:
 
 ### A. Handwriting Detection (Single Responsibility Principle)
 

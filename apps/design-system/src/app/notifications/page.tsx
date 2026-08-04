@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Notification Center. Provides a central view for pipeline alert logs,
+ * @description MedIngest Notification Center. Provides a central view for pipeline alert logs,
  * reviewer assignments, mentions, unread notifications counts, and toast simulation triggers.
  */
 

@@ -1,6 +1,6 @@
-# DigiFax: Clinical Document Intake & Normalization Pipeline
+# MedIngest: Clinical Document Intake & Normalization Pipeline
 
-DigiFax is a production-grade, event-driven medical document intake pipeline that ingests raw fax pages (PDFs/Images), performs OCR and layout parsing, extracts structured clinical data using LLMs, maps medical terminology, validates clinical resources against US Core profiles, orchestrates workflow states, exposes Model Context Protocol (MCP) tools, and exports clinical records to outbound EHR repositories (Epic, Cerner, Athena, Medplum).
+MedIngest is a production-grade, event-driven medical document intake pipeline that ingests raw fax pages (PDFs/Images), performs OCR and layout parsing, extracts structured clinical data using LLMs, maps medical terminology, validates clinical resources against US Core profiles, orchestrates workflow states, exposes Model Context Protocol (MCP) tools, and exports clinical records to outbound EHR repositories (Epic, Cerner, Athena, Medplum).
 
 ---
 
@@ -22,7 +22,7 @@ DigiFax is a production-grade, event-driven medical document intake pipeline tha
 ## 📁 Architecture Directory Layout
 
 ```
-DigiFax/
+MedIngest/
 ├── .github/workflows/          # GitHub Actions CI/CD workflows
 ├── apps/
 │   └── design-system/          # Next.js & Tailwind CSS v4 component showcase portal
@@ -32,7 +32,7 @@ DigiFax/
 │           ├── components/     # UI primitives and application layout shells
 │           └── stories/        # Storybook story integrations
 ├── services/
-│   └── digifax-api/
+│   └── medingest-api/
 │       ├── deploy/             # Deployment configurations (Docker Compose, Kubernetes, Helm)
 │       ├── src/
 │       │   ├── application/    # Ports, services (Search, Validation), use cases, workflows
@@ -57,7 +57,7 @@ DigiFax/
 ### 1. Ingestion Backend Setup
 Clone the repository and install dependencies using `uv`:
 ```bash
-cd services/digifax-api
+cd services/medingest-api
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
@@ -122,7 +122,7 @@ pnpm storybook
 
 ## 🧪 Comprehensive Testing Suite
 
-DigiFax maintains a multi-layer test suite to verify every Clean Architecture boundary.
+MedIngest maintains a multi-layer test suite to verify every Clean Architecture boundary.
 
 Run the test suite using `pytest`:
 ```bash
@@ -144,12 +144,12 @@ Every service is fully instrumented using OpenTelemetry:
 * **Metrics**: Scraped by Prometheus, visualizing latency, terminology accuracy, and EHR export success.
 * **Traces**: Exported to Grafana Tempo, correlating intake transactions across workers.
 * **Logs**: Aggregated by Loki.
-* **Dashboards**: Grafana dashboard file is configured at `services/digifax-api/monitoring/grafana/dashboards/digifax_dashboard.json`.
+* **Dashboards**: Grafana dashboard file is configured at `services/medingest-api/monitoring/grafana/dashboards/medingest_dashboard.json`.
 
 ---
 
 ## ☸️ Production Deployment & DR
 
 * **Kubernetes Deployments**: Configured with Horizontal Pod Autoscaling (HPA) targeting CPU (75%) and memory (80%) thresholds.
-* **Helm Chart**: Dynamic multi-environment chart located under `services/digifax-api/deploy/helm/digifax/`.
-* **Backup script**: Automated database pg_dump and MinIO object store replication script available at `services/digifax-api/deploy/backup/backup.sh`.
+* **Helm Chart**: Dynamic multi-environment chart located under `services/medingest-api/deploy/helm/medingest/`.
+* **Backup script**: Automated database pg_dump and MinIO object store replication script available at `services/medingest-api/deploy/backup/backup.sh`.

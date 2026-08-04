@@ -1,6 +1,6 @@
 # Bounded Context Specification: Tenant Management
 
-This document defines the domain model design, boundaries, relationships, and lifecycle transitions for the **Tenant Management** bounded context inside DigiFax.
+This document defines the domain model design, boundaries, relationships, and lifecycle transitions for the **Tenant Management** bounded context inside medingest.
 
 ---
 

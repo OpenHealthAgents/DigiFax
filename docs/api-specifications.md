@@ -1,6 +1,6 @@
 # API Specifications & Multi-Tenant Endpoint Guards
 
-This document specifies the validation requirements, error responses, and OpenAPI contracts enforced across all FastAPI routes in the DigiFax platform.
+This document specifies the validation requirements, error responses, and OpenAPI contracts enforced across all FastAPI routes in the medingest platform.
 
 ---
 
@@ -106,3 +106,14 @@ Every HTTP request entering our controllers passes through the following validat
 * **Body (Multipart Form)**:
   * `file`: PDF attachment binary payload (Required)
 * **Required Permission**: `document:write`
+
+---
+
+### 2.4 Scanner Integration Webhook (`POST /api/intake/scan`)
+* **Purpose**: Ingest scanned documents mapping source to `SCAN_UPLOAD`.
+* **Headers**:
+  * `X-Tenant-ID`: `tenant-123` (Required)
+* **Body (Multipart Form)**:
+  * `file`: PDF / image binary payload (Required)
+* **Required Permission**: `document:write`
+

@@ -1,6 +1,6 @@
 # Multi-Tenant Repository Refactoring Specification
 
-This document details the features, design patterns, and compliance controls implemented across all data repositories in the DigiFax platform.
+This document details the features, design patterns, and compliance controls implemented across all data repositories in the medingest platform.
 
 ---
 

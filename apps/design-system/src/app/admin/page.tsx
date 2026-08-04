@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description DigiFax Tenant Administration Console.
+ * @description MedIngest Tenant Administration Console.
  * 
  * Provides administrative controls for tenant configuration, organization hierarchies,
  * user rosters, invitations, RBAC roles, API keys, feature flags, subscriptions,

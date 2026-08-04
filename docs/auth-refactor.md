@@ -1,6 +1,6 @@
 # Authentication & SSO Port Refactoring
 
-This document defines the extensible authentication and Single Sign-On (SSO) architecture designed for the DigiFax multi-tenant SaaS platform.
+This document defines the extensible authentication and Single Sign-On (SSO) architecture designed for the medingest multi-tenant SaaS platform.
 
 ---
 

@@ -1,4 +1,4 @@
-# DigiFax Design System & Frontend Shell
+# MedIngest Design System & Frontend Shell
 
 Next.js frontend application presenting user workspaces and the unified Tenant Administration console dashboard. Equipped with Storybook components workbench and Playwright E2E Story tests.
 

@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const recentActivity = [
     { text: "EHR transaction export success to Epic Sandbox", time: "5m ago", type: "success" },
     { text: "OCR threshold warning on DF-9009 (patient signature fuzzy)", time: "1h ago", type: "warning" },
-    { text: "Temporal intake workflow started for doc-9011-fax.pdf", time: "15m ago", type: "info" },
+    { text: "Temporal intake workflow started for doc-9011-scan.pdf", time: "15m ago", type: "info" },
     { text: "Medplum schema validation successfully approved transaction bundle", time: "3h ago", type: "success" }
   ];
 
@@ -41,7 +41,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap gap-2">
             <Button variant="default" className="flex items-center space-x-2">
               <UploadCloud className="h-4 w-4" />
-              <span>Upload Fax Document</span>
+              <span>Upload Clinical Document</span>
             </Button>
             <Button variant="outline" className="flex items-center space-x-2">
               <RefreshCw className="h-4 w-4" />
@@ -56,7 +56,7 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between space-y-0">
-                <span className="text-sm font-medium text-muted-foreground">Today's Ingested Faxes</span>
+                <span className="text-sm font-medium text-muted-foreground">Today's Ingested Documents</span>
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div className="flex items-baseline space-x-2 mt-3">
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg font-bold">Daily Ingestion Volume</CardTitle>
-              <CardDescription>Fax pipeline traffic volumes over the past 7 days</CardDescription>
+              <CardDescription>Document pipeline traffic volumes over the past 7 days</CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
               {/* Minimal Interactive SVG Line Chart */}
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                 <CardDescription>Clinical files ingested through NATS endpoint queues</CardDescription>
               </div>
               <Button variant="ghost" size="sm" className="text-xs font-semibold">
-                <span>View all faxes</span>
+                <span>View all documents</span>
                 <ArrowUpRight className="h-4 w-4 ml-1" />
               </Button>
             </CardHeader>

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medingest-api
+  namespace: default
+  labels:
+    app: medingest-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: medingest-api
+  template:
+    metadata:
+      labels:
+        app: medingest-api
+    spec:
+      containers:
+        - name: medingest-api
+          image: medingest-api:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+          envFrom:
+            - configMapRef:
+                name: medingest-config
+            - secretRef:
+                name: medingest-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: medingest-api-service
+  namespace: default
+spec:
+  selector:
+    app: medingest-api
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medingest-worker
+  namespace: default
+  labels:
+    app: medingest-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: medingest-worker
+  template:
+    metadata:
+      labels:
+        app: medingest-worker
+    spec:
+      containers:
+        - name: medingest-worker
+          image: medingest-api:latest
+          command: ["python", "src/infrastructure/workflows/temporal_worker.py"]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+          envFrom:
+            - configMapRef:
+                name: medingest-config
+            - secretRef:
+                name: medingest-secrets

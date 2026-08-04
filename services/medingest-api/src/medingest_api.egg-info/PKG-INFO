@@ -1,0 +1,42 @@
+Metadata-Version: 2.4
+Name: medingest-api
+Version: 0.1.0
+Summary: MedIngest API Backend Service
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.111.0
+Requires-Dist: uvicorn>=0.30.1
+Requires-Dist: pydantic>=2.7.4
+Requires-Dist: pydantic-settings>=2.3.3
+Requires-Dist: sqlalchemy>=2.0.31
+Requires-Dist: psycopg2-binary>=2.9.9
+Requires-Dist: celery>=5.4.0
+Requires-Dist: redis>=5.0.6
+Requires-Dist: requests>=2.32.3
+Requires-Dist: pypdfium2>=4.28.0
+Requires-Dist: pillow>=10.3.0
+Requires-Dist: python-multipart>=0.0.9
+Requires-Dist: cryptography>=49.0.0
+
+# MedIngest Backend REST API
+
+Clean Hexagonal Architecture backend for ingestion, OCR, parsing, and clinical EHR delivery.
+
+## Structure
+* **`src/domain/`**: Pure enterprise business rules and aggregates (Tenant, IntakeDocument, custom roles, feature flags, subscriptions).
+* **`src/application/`**: Use cases and outbound ports (interfaces for billing, EHR delivery, OpenSearch keyword indexing).
+* **`src/infrastructure/`**: Concrete adapters (FastAPI controllers, base repository implementations, in-memory databases, LiteLLM extractors).
+
+## Setup
+Using Python `uv` tool:
+```powershell
+uv venv
+.venv\Scripts\activate
+uv sync
+```
+
+## Running Tests
+To run all verification suites:
+```powershell
+uv run python -m pytest tests/unit/
+```

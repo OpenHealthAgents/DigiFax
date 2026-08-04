@@ -1,4 +1,4 @@
-name: DigiFax CI/CD Pipeline
+name: MedIngest CI/CD Pipeline
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: services/digifax-api
+        working-directory: services/medingest-api
 
     steps:
       - name: Checkout Code Repository
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Docker Container
         run: |
-          docker build -t digifax-api:latest -f services/digifax-api/Dockerfile services/digifax-api
+          docker build -t medingest-api:latest -f services/medingest-api/Dockerfile services/medingest-api
 
       - name: Install Helm
         uses: azure/setup-helm@v3
@@ -59,7 +59,7 @@ jobs:
           version: 'v3.11.1'
 
       - name: Lint Helm Chart
-        run: helm lint services/digifax-api/deploy/helm/digifax
+        run: helm lint services/medingest-api/deploy/helm/medingest
 
       - name: Package Helm Chart
-        run: helm package services/digifax-api/deploy/helm/digifax --destination dist
+        run: helm package services/medingest-api/deploy/helm/medingest --destination dist

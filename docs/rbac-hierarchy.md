@@ -1,12 +1,12 @@
 # Hierarchical RBAC & Policy Evaluation Design
 
-This document details the authorization engine, role hierarchies, and resource-scoped policy evaluation rules designed for the DigiFax platform.
+This document details the authorization engine, role hierarchies, and resource-scoped policy evaluation rules designed for the medingest platform.
 
 ---
 
 ## 1. Role Hierarchy & Inherited Capabilities
 
-DigiFax implements a strict **directed acyclic graph (DAG)** role hierarchy where higher-level roles inherit all capabilities and permissions of their children.
+medingest implements a strict **directed acyclic graph (DAG)** role hierarchy where higher-level roles inherit all capabilities and permissions of their children.
 
 ```mermaid
 graph TD

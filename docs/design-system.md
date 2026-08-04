@@ -1,6 +1,6 @@
-# DigiFax Design System
+# medingest Design System
 
-The DigiFax Design System is a modern, clean, minimal design system built for enterprise healthcare SaaS platforms. It is optimized for high readability, WCAG AA compliance, dark/light mode responsiveness, and medical workspace reliability.
+The medingest Design System is a modern, clean, minimal design system built for enterprise healthcare SaaS platforms. It is optimized for high readability, WCAG AA compliance, dark/light mode responsiveness, and medical workspace reliability.
 
 ---
 
@@ -24,7 +24,7 @@ All color pairings are selected to guarantee a minimum contrast ratio of 4.5:1.
 
 ## 📐 Spacing & Layout (4px Grid)
 
-DigiFax uses a 4px logical grid system to enforce spatial rhythm.
+medingest uses a 4px logical grid system to enforce spatial rhythm.
 
 * **`2`** (8px) - Padding inside elements / labels.
 * **`4`** (16px) - Standard padding for inputs, buttons, and alert cards.

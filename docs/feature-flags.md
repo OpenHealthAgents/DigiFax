@@ -1,6 +1,6 @@
 # Tenant Feature Flags & Usage Evaluation Strategy
 
-This document specifies the feature toggling models, beta access rules, license constraints, and usage limits enforced in the DigiFax platform.
+This document specifies the feature toggling models, beta access rules, license constraints, and usage limits enforced in the medingest platform.
 
 ---
 

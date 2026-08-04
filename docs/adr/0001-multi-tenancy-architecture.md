@@ -4,7 +4,7 @@
 Approved
 
 ## Context
-The initial implementation of the DigiFax ingestion pipeline was single-tenant. To support enterprise SaaS operations where multiple clinical customers (hospitals, outpatient networks) share the same application cluster, the platform must transition to a secure multi-tenant design that enforces logical data partitioning, isolated physical/logical storage paths, and request authentication.
+The initial implementation of the medingest ingestion pipeline was single-tenant. To support enterprise SaaS operations where multiple clinical customers (hospitals, outpatient networks) share the same application cluster, the platform must transition to a secure multi-tenant design that enforces logical data partitioning, isolated physical/logical storage paths, and request authentication.
 
 ## Decision
 We implement a **Logical Multi-Tenancy Partitioning Model** across all Clean Architecture layers:

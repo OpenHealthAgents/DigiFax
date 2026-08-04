@@ -7,13 +7,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
 
 # Copy dependency configuration
-COPY services/digifax-api/pyproject.toml services/digifax-api/uv.lock* /app/
+COPY services/medingest-api/pyproject.toml services/medingest-api/uv.lock* /app/
 
 # Install dependencies using uv
 RUN uv sync --frozen --no-install-project --no-dev
 
 # Copy application source
-COPY services/digifax-api/src /app/src
+COPY services/medingest-api/src /app/src
 
 # Set PYTHONPATH to include /app
 ENV PYTHONPATH=/app

@@ -1,6 +1,6 @@
 # Request-Scoped TenantContext Specification
 
-This document details the design, configuration headers, and integration patterns of the request-scoped `TenantContext` in the DigiFax platform.
+This document details the design, configuration headers, and integration patterns of the request-scoped `TenantContext` in the medingest platform.
 
 ---
 

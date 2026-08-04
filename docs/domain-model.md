@@ -1,6 +1,6 @@
-# DigiFax Digital Fax Ingestion System: DDD Domain Model Specification
+# medingest Digital Fax Ingestion System: DDD Domain Model Specification
 
-This document defines the comprehensive Domain-Driven Design (DDD) domain model for **DigiFax**. It identifies the business subdomains, classifies them, outlines the Bounded Context mapping, and specifies the Aggregates, Entities, Value Objects, Repositories, and Domain Events for each of the 12 business subdomains.
+This document defines the comprehensive Domain-Driven Design (DDD) domain model for **medingest**. It identifies the business subdomains, classifies them, outlines the Bounded Context mapping, and specifies the Aggregates, Entities, Value Objects, Repositories, and Domain Events for each of the 12 business subdomains.
 
 ---
 
