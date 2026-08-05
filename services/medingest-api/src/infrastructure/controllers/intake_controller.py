@@ -18,14 +18,41 @@ from src.infrastructure.persistence.in_memory_tenant_repository import (
     InMemoryTenantRepository,
 )
 from src.infrastructure.storage.in_memory_storage import InMemoryStorage
+from src.infrastructure.config import settings
 
 router = APIRouter(prefix="/api/intake", tags=["Intake"])
 
-# Singletons representing in-memory storage/database contexts
+# Singletons representing in-memory database contexts
 _repo = InMemoryIntakeDocumentRepository()
 _tenant_repo = InMemoryTenantRepository()
-_storage = InMemoryStorage()
-_event_bus = InMemoryEventBus()
+
+# Lazy-loaded singletons for persistent object storage and distributed queues
+_storage = None
+_event_bus = None
+
+
+def get_storage():
+    """Lazily resolves document storage provider adapter."""
+    global _storage
+    if _storage is None:
+        if settings.use_persistent_storage:
+            from src.infrastructure.storage.s3_storage import S3Storage
+            _storage = S3Storage()
+        else:
+            _storage = InMemoryStorage()
+    return _storage
+
+
+def get_event_bus():
+    """Lazily resolves async message broker event bus adapter."""
+    global _event_bus
+    if _event_bus is None:
+        if settings.use_persistent_storage:
+            from src.infrastructure.messaging.celery_event_bus import CeleryEventBus
+            _event_bus = CeleryEventBus()
+        else:
+            _event_bus = InMemoryEventBus()
+    return _event_bus
 
 
 def get_ingest_use_case() -> IngestDocumentUseCase:
@@ -40,9 +67,10 @@ def get_ingest_use_case() -> IngestDocumentUseCase:
     return IngestDocumentUseCase(
         repository=_repo,
         tenant_repository=_tenant_repo,
-        storage=_storage,
-        event_bus=_event_bus
+        storage=get_storage(),
+        event_bus=get_event_bus()
     )
+
 
 
 @router.post(

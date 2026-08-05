@@ -17,6 +17,8 @@ Requires-Dist: pypdfium2>=4.28.0
 Requires-Dist: pillow>=10.3.0
 Requires-Dist: python-multipart>=0.0.9
 Requires-Dist: cryptography>=49.0.0
+Requires-Dist: pyjwt>=2.8.0
+Requires-Dist: boto3>=1.34.0
 
 # MedIngest Backend REST API
 

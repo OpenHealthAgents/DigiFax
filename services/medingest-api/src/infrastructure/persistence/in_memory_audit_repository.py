@@ -115,8 +115,9 @@ class InMemoryAuditRepository(BaseInMemoryRepository, IAuditRepository):
                             version=r["version"]
                         )
                     )
-            # Sort descending by timestamp
-            results.sort(key=lambda x: x.timestamp, reverse=True)
+            # Sort descending by timestamp, preserving latest-inserted-first for equal timestamps
+            results.sort(key=lambda x: x.timestamp)
+            results.reverse()
             return results
 
     def get_last_event_hash(self, tenant_id: str) -> str:

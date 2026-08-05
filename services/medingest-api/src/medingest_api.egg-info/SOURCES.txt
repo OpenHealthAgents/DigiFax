@@ -166,6 +166,7 @@ src/domain/validation/__init__.py
 src/domain/validation/events.py
 src/domain/validation/rules.py
 src/infrastructure/__init__.py
+src/infrastructure/config.py
 src/infrastructure/ai_provider/litellm_adapter.py
 src/infrastructure/ai_provider/llama_cpp_adapter.py
 src/infrastructure/ai_provider/ollama_adapter.py
@@ -196,6 +197,7 @@ src/infrastructure/ehr/__init__.py
 src/infrastructure/ehr/athena_exporter.py
 src/infrastructure/ehr/bulk_fhir_exporter.py
 src/infrastructure/ehr/cerner_exporter.py
+src/infrastructure/ehr/eclinicalworks_exporter.py
 src/infrastructure/ehr/epic_exporter.py
 src/infrastructure/ehr/hapi_fhir_exporter.py
 src/infrastructure/ehr/medplum_exporter.py

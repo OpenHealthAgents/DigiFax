@@ -20,9 +20,9 @@ class VerifyAuditIntegrityUseCase:
         Recalculates sequential SHA256 chain signatures to audit database health status.
         """
         events = self.repo.list_events(tenant_id)
-        # Sort from oldest to newest (ascending order by timestamp/index)
-        # Assuming events list resolved by repo is sorted descending by default, let's reverse it.
-        sorted_events = sorted(events, key=lambda e: e.timestamp)
+        # Since list_events is sorted descending (latest first) with stable insertion order,
+        # reversing it is the most robust way to recover the original oldest-to-newest sequence.
+        sorted_events = list(reversed(events))
 
         previous_hash = "GENESIS"
         tampered_ids = []
